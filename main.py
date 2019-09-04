@@ -1,5 +1,6 @@
 from pathlib import Path
 import subprocess, os, time, urllib.request, shutil, sys, random, json
+import zipfile
 
 
 def downloadFile(url, filename):
@@ -60,7 +61,34 @@ def remap(version):
         print(f'ERROR: Missing files')
 
 
-def decompile(version):
+def decompilefern(decompVersion, version):
+    print('=== Decompiling using FernFlower ====')
+    t = time.time()
+
+    path = Path(f'./src/{version}-temp.jar')
+    fernflower = Path('./lib/fernflower.jar')
+    if path.exists() and fernflower.exists():
+        path = path.resolve()
+        fernflower = fernflower.resolve()
+
+        subprocess.run(
+            ['java', '-jar', fernflower.__str__(), "-hes=0 -hdc=0 -dgs=1 -ren=1", path.__str__(),
+             f'./src/{decompVersion}'], shell=True)
+
+        print(f'- Removing -> {version}-temp.jar')
+        os.remove(f'./src/{version}-temp.jar')
+
+        with zipfile.ZipFile(f'./src/{decompVersion}/{version}-temp.jar') as z:
+            z.extractall(path=f'./src/{decompVersion}')
+        print(f'- Removing -> {decompVersion}/{version}-temp.jar')
+        os.remove(f'./src/{decompVersion}/{version}-temp.jar')
+        t = time.time() - t
+        print('Done in %.1fs' % t)
+    else:
+        print(f'ERROR: Missing files')
+
+
+def decompilecfr(decompVersion, version):
     print('=== Decompiling using CFR ====')
     t = time.time()
 
@@ -84,14 +112,22 @@ def decompile(version):
     else:
         print(f'ERROR: Missing files')
 
-
 def reMapMapping(version):
     remapPrimitives = {"int": "I", "double": "D", "boolean": "Z", "float": "F", "long": "J"}
     remapFilePath = lambda path: "L" + "/".join(path.split(".")) + ";" if path not in remapPrimitives else \
         remapPrimitives[path]
+    with open(f'mappings/{version}/client.txt', 'r') as inputFile:
+        fileName = {}
+        for line in inputFile.readlines():
+            if line.startswith('#'):  # comment at the top, could be stripped
+                continue
+            deobf_name, obf_name = line.split(' -> ')
+            if not line.startswith('    '):
+                obf_name = obf_name.split(":")[0]
+                fileName[remapFilePath(deobf_name)] = obf_name  # save it to compare to put the Lb
+
     with open(f'mappings/{version}/client.txt', 'r') as inputFile, open(f'mappings/{version}/client.tsrg',
                                                                         'w+')  as outputFile:
-        fileName = {}
         for line in inputFile.readlines():
             if line.startswith('#'):  # comment at the top, could be stripped
                 continue
@@ -110,7 +146,8 @@ def reMapMapping(version):
                         methodType = remapFilePath(methodType)
                     if variables != "":
                         variables = [remapFilePath(variable) for variable in variables.split(",")]
-                        variables = ["["+variable[:-3]+";" if "[]" in variable else variable for variable in variables]
+                        variables = ["[" + variable[:-3] + ";" if "[]" in variable else variable for variable in
+                                     variables]
                         variables = "".join(
                             ["L" + fileName[variable] + ";" if variable in fileName else variable for variable in
                              variables])
@@ -120,7 +157,6 @@ def reMapMapping(version):
 
             else:
                 obf_name = obf_name.split(":")[0]
-                fileName[remapFilePath(deobf_name)] = obf_name  # save it to compare to put the Lb
                 outputFile.write(obf_name + " " + remapFilePath(deobf_name)[1:-1] + "\n")
 
 
@@ -146,7 +182,9 @@ def makePaths(version):
 
 
 if __name__ == "__main__":
-    print("Please Run once the snapshot/version on your computer")
+    print("Please Run once the snapshot/version on your computer via Minecraft Launcher so it can download it")
+    decompiler=input("Please input you decompiler choice: fernflower or cfr (default: cfr)")
+    decompiler=decompiler if decompiler in ["fernflower","cfr"] else "cfr"
     version = input("Please input a valid version starting from 19w36a : ") or "19w36a"
     decompVersion = makePaths(version)
     r = input('Download mappings? (y/n): ')
@@ -159,9 +197,12 @@ if __name__ == "__main__":
 
     r = input('Remap? (y/n): ')
     if r == 'y':
-        version = remap(version)
-
+        remap(version)
     r = input('Decompile? (y/n): ')
     if r == 'y':
-        print(decompVersion)
-        decompile(decompVersion)
+        if decompiler=="cfr":
+            decompilecfr(decompVersion, version)
+        else:
+            decompilefern(decompVersion, version)
+    print("===FINISHED===")
+    input("Press Enter key to exit")
