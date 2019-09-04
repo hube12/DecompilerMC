@@ -99,13 +99,13 @@ def decompilecfr(decompVersion, version):
         cfr = cfr.resolve()
 
         subprocess.run(
-            ['java', '-jar', cfr.__str__(), path.__str__(), '--outputdir', f'./src/{version}', '--caseinsensitivefs',
+            ['java', '-jar', cfr.__str__(), path.__str__(), '--outputdir', f'./src/{decompVersion}', '--caseinsensitivefs',
              'true'], shell=True)
 
         print(f'- Removing -> {version}-temp.jar')
         print(f'- Removing -> summary.txt')
         os.remove(f'./src/{version}-temp.jar')
-        os.remove(f'./src/{version}/summary.txt')
+        os.remove(f'./src/{decompVersion}/summary.txt')
 
         t = time.time() - t
         print('Done in %.1fs' % t)
