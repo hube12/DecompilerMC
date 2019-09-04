@@ -145,8 +145,8 @@ def makePaths(version):
     return version
 
 if __name__ == "__main__":
-
-    version = "19w36a"
+	print("Please Run once the snapshot/version on your computer")
+    version = input("Please input a valid version starting from 19w36a") or "19w36a"
     decompVersion=makePaths(version)
     r = input('Download mappings? (y/n): ')
     if r == 'y':
