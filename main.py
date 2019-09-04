@@ -121,7 +121,7 @@ def reMapMapping(version):
             else:
                 obf_name = obf_name.split(":")[0]
                 fileName[remapFilePath(deobf_name)] = obf_name  # save it to compare to put the Lb
-                outputFile.write(obf_name + " " + deobf_name + "\n")
+                outputFile.write(obf_name + " " + remapFilePath(deobf_name)[1:-1] + "\n")
 
 
 def makePaths(version):
