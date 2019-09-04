@@ -114,9 +114,9 @@ def reMapMapping(version):
                         variables = "".join(
                             ["L" + fileName[variable] + ";" if variable in fileName else variable for variable in
                              variables])
-                    outputFile.write(f' {obf_name} ({variables}){methodType} {functionName}\n')
+                    outputFile.write(f'\t{obf_name} ({variables}){methodType} {functionName}\n')
                 else:
-                    outputFile.write(f' {obf_name} {methodName}\n')
+                    outputFile.write(f'\t{obf_name} {methodName}\n')
 
             else:
                 obf_name = obf_name.split(":")[0]
