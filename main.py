@@ -50,7 +50,7 @@ def remap(version):
         specialsource = specialsource.resolve()
 
         subprocess.run(['java', '-jar', specialsource.__str__(), '--in-jar', path.__str__(), '--out-jar',
-                        f'./src/{version}-temp.jar', '--srg-in', mapp.__str__(),"--kill-lvt"], shell=True)
+                        f'./src/{version}-temp.jar', '--srg-in', mapp.__str__(), "--kill-lvt"], shell=True)
 
         print(f'- New -> {version}-temp.jar')
 
@@ -129,7 +129,7 @@ def makePaths(version):
 
     if not path.exists():
         path.mkdir(parents=True)
-    path=Path(f'src/{version}')
+    path = Path(f'src/{version}')
     if not path.exists():
         path.mkdir(parents=True)
     else:
@@ -144,10 +144,11 @@ def makePaths(version):
         path.mkdir(parents=True)
     return version
 
+
 if __name__ == "__main__":
-	print("Please Run once the snapshot/version on your computer")
+    print("Please Run once the snapshot/version on your computer")
     version = input("Please input a valid version starting from 19w36a") or "19w36a"
-    decompVersion=makePaths(version)
+    decompVersion = makePaths(version)
     r = input('Download mappings? (y/n): ')
     if r == 'y':
         getMappings(version)
