@@ -110,7 +110,7 @@ def reMapMapping(version):
                         methodType = remapFilePath(methodType)
                     if variables != "":
                         variables = [remapFilePath(variable) for variable in variables.split(",")]
-
+                        variables = ["["+variable[:-3]+";" if "[]" in variable else variable for variable in variables]
                         variables = "".join(
                             ["L" + fileName[variable] + ";" if variable in fileName else variable for variable in
                              variables])
