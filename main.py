@@ -50,7 +50,7 @@ def remap(version):
         specialsource = specialsource.resolve()
 
         subprocess.run(['java', '-jar', specialsource.__str__(), '--in-jar', path.__str__(), '--out-jar',
-                        f'./src/{version}-temp.jar', '--srg-in', mapp.__str__()], shell=True)
+                        f'./src/{version}-temp.jar', '--srg-in', mapp.__str__(),"--kill-lvt"], shell=True)
 
         print(f'- New -> {version}-temp.jar')
 
