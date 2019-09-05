@@ -166,7 +166,7 @@ def reMapMapping(version):
 
             else:
                 obf_name = obf_name.split(":")[0]
-                outputFile.write(obf_name + " " + remapFilePath(deobf_name)[1:-1] + "\n")
+                outputFile.write(remapFilePath(obf_name)[1:-1] + " " + remapFilePath(deobf_name)[1:-1] + "\n")
 
 
 def makePaths(version):
