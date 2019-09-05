@@ -99,7 +99,8 @@ def decompilecfr(decompVersion, version):
         cfr = cfr.resolve()
 
         subprocess.run(
-            ['java', '-jar', cfr.__str__(), path.__str__(), '--outputdir', f'./src/{decompVersion}', '--caseinsensitivefs',
+            ['java', '-jar', cfr.__str__(), path.__str__(), '--outputdir', f'./src/{decompVersion}',
+             '--caseinsensitivefs',
              'true'], shell=True)
 
         print(f'- Removing -> {version}-temp.jar')
@@ -111,6 +112,7 @@ def decompilecfr(decompVersion, version):
         print('Done in %.1fs' % t)
     else:
         print(f'ERROR: Missing files')
+
 
 def reMapMapping(version):
     remapPrimitives = {"int": "I", "double": "D", "boolean": "Z", "float": "F", "long": "J"}
@@ -144,6 +146,7 @@ def reMapMapping(version):
                         methodType = "V"
                     else:
                         methodType = remapFilePath(methodType)
+                        methodType = "L" + fileName[methodType] + ";" if methodType in fileName else methodType
                     if variables != "":
                         variables = [remapFilePath(variable) for variable in variables.split(",")]
                         variables = ["[" + variable[:-3] + ";" if "[]" in variable else variable for variable in
@@ -183,8 +186,8 @@ def makePaths(version):
 
 if __name__ == "__main__":
     print("Please Run once the snapshot/version on your computer via Minecraft Launcher so it can download it")
-    decompiler=input("Please input you decompiler choice: fernflower or cfr (default: cfr)")
-    decompiler=decompiler if decompiler in ["fernflower","cfr"] else "cfr"
+    decompiler = input("Please input you decompiler choice: fernflower or cfr (default: cfr)")
+    decompiler = decompiler if decompiler in ["fernflower", "cfr"] else "cfr"
     version = input("Please input a valid version starting from 19w36a : ") or "19w36a"
     decompVersion = makePaths(version)
     r = input('Download mappings? (y/n): ')
@@ -200,7 +203,7 @@ if __name__ == "__main__":
         remap(version)
     r = input('Decompile? (y/n): ')
     if r == 'y':
-        if decompiler=="cfr":
+        if decompiler == "cfr":
             decompilecfr(decompVersion, version)
         else:
             decompilefern(decompVersion, version)
