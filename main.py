@@ -115,9 +115,9 @@ def decompilecfr(decompVersion, version):
 
 
 def reMapMapping(version):
-    remapPrimitives = {"int": "I", "double": "D", "boolean": "Z", "float": "F", "long": "J"}
-    remapFilePath = lambda path: "L" + "/".join(path.split(".")) + ";" if path not in remapPrimitives else \
-        remapPrimitives[path]
+    remapPrimitives = {"int": "I", "double": "D", "boolean": "Z", "float": "F", "long": "J", "byte": "B", "short": "S"}
+    remapFilePath = lambda path: "L" + "/".join(path.split(".")) + ";" if not (
+                path in remapPrimitives or path[:-2] in remapPrimitives) else remapPrimitives[path] if not "[]" in path else "["+remapPrimitives[path[:-2]]
     with open(f'mappings/{version}/client.txt', 'r') as inputFile:
         fileName = {}
         for line in inputFile.readlines():
@@ -147,13 +147,19 @@ def reMapMapping(version):
                     else:
                         methodType = remapFilePath(methodType)
                         methodType = "L" + fileName[methodType] + ";" if methodType in fileName else methodType
+                        methodType = "[" + methodType[:-3] + ";" if "[]" in methodType else methodType
+                        if "." in methodType:
+                            methodType="/".join(methodType.split("."))
                     if variables != "":
                         variables = [remapFilePath(variable) for variable in variables.split(",")]
                         variables = ["[" + variable[:-3] + ";" if "[]" in variable else variable for variable in
                                      variables]
+
                         variables = "".join(
                             ["L" + fileName[variable] + ";" if variable in fileName else variable for variable in
                              variables])
+                        if "." in variables:
+                            variables = "/".join(variables.split("."))
                     outputFile.write(f'\t{obf_name} ({variables}){methodType} {functionName}\n')
                 else:
                     outputFile.write(f'\t{obf_name} {methodName}\n')
