@@ -6,7 +6,6 @@
 This tool will help you convert mappings from mojang from their proguard format to the tsrg format that then can be used directly with specialsource which will then remap the client jar. Once that done it can be decompiled either with cfr (code only) or fernflower (assets and code).
 
 ---
-
 **Important Note **
 
 We support both linux and windows.
