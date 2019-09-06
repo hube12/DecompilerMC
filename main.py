@@ -52,7 +52,7 @@ def remap(version):
         specialsource = specialsource.resolve()
 
         subprocess.run(['java', '-jar', specialsource.__str__(), '--in-jar', path.__str__(), '--out-jar',
-                        f'./src/{version}-temp.jar', '--srg-in', mapp.__str__(), "--kill-lvt"])
+                        f'./src/{version}-temp.jar', '--srg-in', mapp.__str__(), "--kill-lvt"], check=True)
 
         print(f'- New -> {version}-temp.jar')
 
@@ -74,7 +74,7 @@ def decompilefern(decompVersion, version):
 
         subprocess.run(
             ['java', '-jar', fernflower.__str__(), "-hes=0 -hdc=0 -dgs=1 -ren=1", path.__str__(),
-             f'./src/{decompVersion}'])
+             f'./src/{decompVersion}'], check=True)
 
         print(f'- Removing -> {version}-temp.jar')
         os.remove(f'./src/{version}-temp.jar')
@@ -102,7 +102,7 @@ def decompilecfr(decompVersion, version):
         subprocess.run(
             ['java', '-jar', cfr.__str__(), path.__str__(), '--outputdir', f'./src/{decompVersion}',
              '--caseinsensitivefs',
-             'true'])
+             'true'], check=True)
 
         print(f'- Removing -> {version}-temp.jar')
         print(f'- Removing -> summary.txt')
