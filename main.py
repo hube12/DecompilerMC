@@ -2,6 +2,7 @@ from pathlib import Path
 import subprocess, os, time, urllib.request, shutil, sys, random, json
 import zipfile
 
+mc_path = Path("~/.minecraft") if os.name == "posix" else Path("~/AppData/Roaming/.minecraft")
 
 def downloadFile(url, filename):
     try:
@@ -20,7 +21,7 @@ def downloadFile(url, filename):
 def getMappings(version):
     if Path(f'mappings/{version}/client.txt').is_file():
         return
-    pathToJson = Path(f'~/AppData/Roaming/.minecraft/versions/{version}/{version}.json').expanduser()
+    pathToJson = (mc_path / f"versions/{version}/{version}.json").expanduser()
 
     if pathToJson.exists() and pathToJson.is_file():
         print(f'Found {version}.json')
@@ -41,7 +42,7 @@ def getMappings(version):
 def remap(version):
     print('=== Remapping jar using SpecialSource ====')
     t = time.time()
-    path = Path(f'~/AppData/Roaming/.minecraft/versions/{version}/{version}.jar').expanduser()
+    path = (mc_path / f'versions/{version}/{version}.jar').expanduser()
     mapp = Path(f'mappings/{version}/client.tsrg')
     specialsource = Path('./lib/SpecialSource-1.8.6.jar')
 
@@ -51,7 +52,7 @@ def remap(version):
         specialsource = specialsource.resolve()
 
         subprocess.run(['java', '-jar', specialsource.__str__(), '--in-jar', path.__str__(), '--out-jar',
-                        f'./src/{version}-temp.jar', '--srg-in', mapp.__str__(), "--kill-lvt"], shell=True)
+                        f'./src/{version}-temp.jar', '--srg-in', mapp.__str__(), "--kill-lvt"])
 
         print(f'- New -> {version}-temp.jar')
 
@@ -73,7 +74,7 @@ def decompilefern(decompVersion, version):
 
         subprocess.run(
             ['java', '-jar', fernflower.__str__(), "-hes=0 -hdc=0 -dgs=1 -ren=1", path.__str__(),
-             f'./src/{decompVersion}'], shell=True)
+             f'./src/{decompVersion}'])
 
         print(f'- Removing -> {version}-temp.jar')
         os.remove(f'./src/{version}-temp.jar')
@@ -101,7 +102,7 @@ def decompilecfr(decompVersion, version):
         subprocess.run(
             ['java', '-jar', cfr.__str__(), path.__str__(), '--outputdir', f'./src/{decompVersion}',
              '--caseinsensitivefs',
-             'true'], shell=True)
+             'true'])
 
         print(f'- Removing -> {version}-temp.jar')
         print(f'- Removing -> summary.txt')
