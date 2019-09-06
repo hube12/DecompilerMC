@@ -9,6 +9,8 @@ import urllib.request
 import zipfile
 from pathlib import Path
 
+mc_path = Path("~/.minecraft") if os.name == "posix" else Path("~/AppData/Roaming/.minecraft")
+
 
 def downloadFile(url, filename):
     try:
@@ -27,7 +29,7 @@ def downloadFile(url, filename):
 def getMappings(version):
     if Path(f'mappings/{version}/client.txt').is_file():
         return
-    pathToJson = Path(f'~/AppData/Roaming/.minecraft/versions/{version}/{version}.json').expanduser()
+    pathToJson = (mc_path / f"versions/{version}/{version}.json").expanduser()
     if pathToJson.exists() and pathToJson.is_file():
         print(f'Found {version}.json')
         pathToJson = pathToJson.resolve()
@@ -44,14 +46,14 @@ def getMappings(version):
 def remap(version):
     print('=== Remapping jar using SpecialSource ====')
     t = time.time()
-    path = Path(f'~/AppData/Roaming/.minecraft/versions/{version}/{version}.jar').expanduser()
+    path = (mc_path / f'versions/{version}/{version}.jar').expanduser()
     mapp = Path(f'mappings/{version}/client.tsrg')
     specialsource = Path('./lib/SpecialSource-1.8.6.jar')
     if path.exists() and mapp.exists() and specialsource.exists():
         path = path.resolve()
         mapp = mapp.resolve()
         specialsource = specialsource.resolve()
-        subprocess.run(['java', '-jar', specialsource.__str__(), '--in-jar', path.__str__(), '--out-jar', f'./src/{version}-temp.jar', '--srg-in', mapp.__str__(), "--kill-lvt"])
+        subprocess.run(['java', '-jar', specialsource.__str__(), '--in-jar', path.__str__(), '--out-jar', f'./src/{version}-temp.jar', '--srg-in', mapp.__str__(), "--kill-lvt"], check=True)
         print(f'- New -> {version}-temp.jar')
         t = time.time() - t
         print('Done in %.1fs' % t)
@@ -60,7 +62,7 @@ def remap(version):
 
 
 def decompilefern(decompVersion, version):
-    print('=== Decompiling using FernFlower ====')
+    print('=== Decompiling using FernFlower (not silent dunno why) ===')
     t = time.time()
 
     path = Path(f'./src/{version}-temp.jar')
@@ -68,15 +70,18 @@ def decompilefern(decompVersion, version):
     if path.exists() and fernflower.exists():
         path = path.resolve()
         fernflower = fernflower.resolve()
-        subprocess.run(['java', '-jar', fernflower.__str__(), "-hes=0 -hdc=0 -dgs=1 -ren=1", path.__str__(), f'./src/{decompVersion}'])
+        subprocess.run(['java', '-jar', fernflower.__str__(), "-hes=0 -hdc=0 -dgs=1 -ren=1 -log=WARN", path.__str__(), f'./src/{decompVersion}'], check=True)
         print(f'- Removing -> {version}-temp.jar')
         os.remove(f'./src/{version}-temp.jar')
         with zipfile.ZipFile(f'./src/{decompVersion}/{version}-temp.jar') as z:
             z.extractall(path=f'./src/{decompVersion}')
-        print(f'- Removing -> {decompVersion}/{version}-temp.jar')
-        os.remove(f'./src/{decompVersion}/{version}-temp.jar')
         t = time.time() - t
         print('Done in %.1fs' % t)
+        print(f'Remove Extra Jar file (file was decompressed in {decompVersion})? (y/n): ')
+        response = input() or "y"
+        if response == 'y':
+            print(f'- Removing -> {decompVersion}/{version}-temp.jar')
+            os.remove(f'./src/{decompVersion}/{version}-temp.jar')
     else:
         print(f'ERROR: Missing files')
 
@@ -90,7 +95,7 @@ def decompilecfr(decompVersion, version):
     if path.exists() and cfr.exists():
         path = path.resolve()
         cfr = cfr.resolve()
-        subprocess.run(['java', '-jar', cfr.__str__(), path.__str__(), '--outputdir', f'./src/{decompVersion}', '--caseinsensitivefs', 'true', "--silent", "true"])
+        subprocess.run(['java', '-jar', cfr.__str__(), path.__str__(), '--outputdir', f'./src/{decompVersion}', '--caseinsensitivefs', 'true', "--silent", "true"], check=True)
         print(f'- Removing -> {version}-temp.jar')
         print(f'- Removing -> summary.txt')
         os.remove(f'./src/{version}-temp.jar')
@@ -162,7 +167,7 @@ def reMapMapping(version):
                                     variables[i] = "[" + variables[i][:-1] + ";"
                                 else:
                                     variables[i] = "[" + variables[i]
-                        variables="".join(variables)
+                        variables = "".join(variables)
 
                     outputFile.write(f'\t{obf_name} ({variables}){methodType} {functionName}\n')
                 else:
@@ -196,22 +201,22 @@ def makePaths(version):
 
 if __name__ == "__main__":
     print("Please Run once the snapshot/version on your computer via Minecraft Launcher so it can download it")
-    decompiler = input("Please input you decompiler choice: fernflower or cfr (default: cfr)")
+    decompiler = input("Please input you decompiler choice: fernflower or cfr (default: cfr) : ")
     decompiler = decompiler if decompiler in ["fernflower", "cfr"] else "cfr"
     version = input("Please input a valid version starting from 19w36a : ") or "19w36a"
     decompVersion = makePaths(version)
-    r = input('Download mappings? (y/n): ')
+    r = input('Download mappings? (y/n): ') or "y"
     if r == 'y':
         getMappings(version)
 
-    r = input('Remap mappings to tsrg? (y/n): ')
+    r = input('Remap mappings to tsrg? (y/n): ') or "y"
     if r == 'y':
         reMapMapping(version)
 
-    r = input('Remap? (y/n): ')
+    r = input('Remap? (y/n): ') or "y"
     if r == 'y':
         remap(version)
-    r = input('Decompile? (y/n): ')
+    r = input('Decompile? (y/n): ') or "y"
     if r == 'y':
         if decompiler == "cfr":
             decompilecfr(decompVersion, version)
