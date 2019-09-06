@@ -10,7 +10,7 @@ Of course we provide all that toolchain directly so your output will be readable
 ---
 **Important Note**
 
-You need to run first your Minecraft Launcher to download the desired version (we support only from 19w36a since this is where mojang shipped mappings) then you are good to go
+You need to run first your Minecraft Launcher to download the desired version (we support only from 19w36a and 1.14.4 since this is where mojang shipped mappings) then you are good to go
 
 We support both linux and windows.
 
