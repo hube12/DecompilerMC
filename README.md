@@ -18,8 +18,10 @@ You need a java runtime inside your path (Java 8 should be good)
 
 CFR decompilation is approximately 60s and fernflower takes roughly 200s, please give it time
 
-For windows you can run the release file directly (in https://github.com/hube12/DecompilerMC/releases/tag/0.1 ), you can also run it directly with ptyhon 3.5+ with `python main.py`
+For windows you can run the release file directly (in https://github.com/hube12/DecompilerMC/releases/tag/0.1 ), you can also run it directly with python 3.5+ with `python main.py`
 
-For linux you can run the release file directly (in https://github.com/hube12/DecompilerMC/releases/tag/0.2 ), you can also run it directly with ptyhon 3.5+ with `python main.py`
+For linux you can run the release file directly (in https://github.com/hube12/DecompilerMC/releases/tag/0.2 ), you can also run it directly with python 3.5+ with `python main.py`
+
+For MAC OS you can run the release file directly (in https://github.com/hube12/DecompilerMC/releases/tag/0.3 ), you can also run it directly with python 3.5+ with `python main.py`
 
 ----
