@@ -11,7 +11,7 @@ import urllib.request
 import zipfile
 from pathlib import Path
 
-mc_path = Path("~/Library/Application Support/minecraft") if platform.platform() == "Darwin" else Path("~/.minecraft") if os.name == "posix" else Path("~/AppData/Roaming/.minecraft")
+mc_path = Path("~/Library/Application Support/minecraft") if platform.system() == "Darwin" else Path("~/.minecraft") if os.name == "posix" else Path("~/AppData/Roaming/.minecraft")
 
 
 def downloadFile(url, filename):
