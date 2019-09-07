@@ -1,15 +1,31 @@
+#!/usr/bin/env python3
 import json
 import os
 import random
 import shutil
 import subprocess
 import sys
+assert sys.version_info >= (3, 5)
 import time
 import urllib.request
 import zipfile
 from pathlib import Path
 
-mc_path = Path("~/.minecraft") if os.name == "posix" else Path("~/AppData/Roaming/.minecraft")
+
+
+def getMinecraftPath():
+    if sys.platform.startswith('linux'):
+        return Path("~/.minecraft")
+    elif sys.platform.startswith('win'):
+        return Path("~/AppData/Roaming/.minecraft")
+    elif sys.platform.startswith('darwin'):
+        return Path("~/Library/Application Support/minecraft")
+    else:
+        print("Cannot detect of version : %s. Please report to your closest sysadmin" % sys.platform)
+        sys.exit()
+
+
+mc_path = getMinecraftPath()
 
 
 def downloadFile(url, filename):
@@ -201,9 +217,9 @@ def makePaths(version):
 
 if __name__ == "__main__":
     print("Please Run once the snapshot/version on your computer via Minecraft Launcher so it can download it")
-    decompiler = input("Please input you decompiler choice: fernflower or cfr (default: cfr) : ")
-    decompiler = decompiler if decompiler in ["fernflower", "cfr"] else "cfr"
-    version = input("Please input a valid version starting from 19w36a : ") or "19w36a"
+    decompiler = input("Please input you decompiler choice: fernflower (f) or cfr (default: cfr) : ")
+    decompiler = decompiler if decompiler.lower() in ["fernflower", "cfr", "f"] else "cfr"
+    version = input("Please input a valid version starting from 19w36a and 1.14.4 : ") or "1.14.4"
     decompVersion = makePaths(version)
     r = input('Download mappings? (y/n): ') or "y"
     if r == 'y':
@@ -218,7 +234,7 @@ if __name__ == "__main__":
         remap(version)
     r = input('Decompile? (y/n): ') or "y"
     if r == 'y':
-        if decompiler == "cfr":
+        if decompiler.lower() == "cfr":
             decompilecfr(decompVersion, version)
         else:
             decompilefern(decompVersion, version)
