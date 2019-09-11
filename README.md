@@ -22,6 +22,6 @@ For windows you can run the release file directly (in https://github.com/hube12/
 
 For linux you can run the release file directly (in https://github.com/hube12/DecompilerMC/releases/tag/0.2 ), you can also run it directly with python 3.5+ with `python main.py`
 
-For MAC OS you can run the release file directly (in https://github.com/hube12/DecompilerMC/releases/tag/0.3 ), you can also run it directly with python 3.5+ with `python main.py`
+For macOS you can run the release file directly (in https://github.com/hube12/DecompilerMC/releases/tag/0.3 ). You can also run it directly, however you may need to install Python 3.5 first. You can install Python 3 with [Homebrew](https://brew.sh) (`brew install python`), and run it directly as: `python3 main.py`
 
 ----
