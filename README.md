@@ -10,18 +10,16 @@ Of course we provide all that toolchain directly so your output will be readable
 ---
 **Important Note**
 
-You need to run first your Minecraft Launcher to download the desired version (we support only from 19w36a and 1.14.4 since this is where mojang shipped mappings) then you are good to go
+You need an internet connection to download the mappings, you can ofc put them in the respective folder if you have them physically
 
-We support both linux and windows.
+We support linux, MacOS and linux
 
 You need a java runtime inside your path (Java 8 should be good)
 
 CFR decompilation is approximately 60s and fernflower takes roughly 200s, please give it time
 
-For windows you can run the release file directly (in https://github.com/hube12/DecompilerMC/releases/tag/0.1 ), you can also run it directly with python 3.5+ with `python main.py`
+You can run it directly with python 3.5+ with `python3 main.py`
 
-For linux you can run the release file directly (in https://github.com/hube12/DecompilerMC/releases/tag/0.2 ), you can also run it directly with python 3.5+ with `python main.py`
-
-For MAC OS you can run the release file directly (in https://github.com/hube12/DecompilerMC/releases/tag/0.3 ), you can also run it directly with python 3.5+ with `python main.py`
+There is a common release here:  https://github.com/hube12/DecompilerMC/releases/tag/0.4 for all version
 
 ----
