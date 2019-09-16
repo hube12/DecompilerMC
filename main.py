@@ -168,7 +168,8 @@ def decompile_fernflower(decompVersion, version,type):
         subprocess.run(['java', '-jar', fernflower.__str__(), "-hes=0 -hdc=0 -dgs=1 -ren=1 -log=WARN", path.__str__(), f'./src/{decompVersion}/{type}'], check=True)
         print(f'- Removing -> {version}-{type}-temp.jar')
         os.remove(f'./src/{version}-{type}-temp.jar')
-        with zipfile.ZipFile(f'./src/{decompVersion}/{type}/{version}-temp.jar') as z:
+        print("Decompressing remapped jar to directory")
+        with zipfile.ZipFile(f'./src/{decompVersion}/{type}/{version}-{type}-temp.jar') as z:
             z.extractall(path=f'./src/{decompVersion}/{type}')
         t = time.time() - t
         print('Done in %.1fs' % t)
@@ -345,6 +346,7 @@ def main():
         else:
             decompile_fernflower(decompiled_version, version,type)
         print("===FINISHED===")
+        print(f"output is in /src/{version}")
         input("Press Enter key to exit")
         exit(0)
 
@@ -372,6 +374,7 @@ def main():
             decompile_fernflower(decompiled_version, version,type)
 
     print("===FINISHED===")
+    print(f"output is in /src/{version}")
     input("Press Enter key to exit")
 
 
