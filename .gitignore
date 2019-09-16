@@ -1,0 +1,8 @@
+dist
+build
+mappings
+src
+.idea
+main.spec
+versions
+__pycache__
