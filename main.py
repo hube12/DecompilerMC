@@ -68,7 +68,7 @@ def get_version_manifest(target_version):
         print('ERROR: Missing manifest file: version.json')
         print("Aborting")
         input()
-        exit(0)
+        sys.exit()
 
 
 def get_version_jar(target_version, type):
@@ -86,12 +86,12 @@ def get_version_jar(target_version, type):
                 print("Could not download jar, missing fields")
                 print("Aborting")
                 input()
-                exit(0)
+                sys.exit()
     else:
         print('ERROR: Missing manifest file: version.json')
         print("Aborting")
         input()
-        exit(0)
+        sys.exit()
     print("Done !")
 
 
@@ -118,7 +118,7 @@ def get_mappings(version, type):
                     print(f'Error: Missing server mappings for {version}')
             else:
                 print('ERROR, type not recognized')
-                exit(0)
+                sys.exit()
 
             print(f'Downloading the mappings for {version}...')
             download_file(url, f'mappings/{version}/{"client" if type==CLIENT else "server"}.txt')
@@ -126,7 +126,7 @@ def get_mappings(version, type):
         print('ERROR: Missing manifest file: version.json')
         print("Aborting")
         input()
-        exit(0)
+        sys.exit()
 
 
 def remap(version, type):
@@ -138,7 +138,7 @@ def remap(version, type):
         if path_temp.exists() and path_temp.is_file():
             r = input("Error, defaulting to client.jar from your local minecraft folder, continue? (y/n)") or "y"
             if r != "y":
-                exit(-1)
+                sys.exit()
             path=path_temp
     mapp = Path(f'mappings/{version}/{type}.tsrg')
     specialsource = Path('./lib/SpecialSource-1.8.6.jar')
@@ -154,7 +154,7 @@ def remap(version, type):
         print(f'ERROR: Missing files: ./lib/SpecialSource-1.8.6.jar or mappings/{version}/{type}.tsrg or versions/{version}/{type}.jar')
         print("Aborting")
         input()
-        exit(0)
+        sys.exit()
 
 
 def decompile_fernflower(decompVersion, version,type):
@@ -182,7 +182,7 @@ def decompile_fernflower(decompVersion, version,type):
         print(f'ERROR: Missing files: ./lib/fernflower.jar or ./src/{version}-{type}-temp.jar')
         print("Aborting")
         input()
-        exit(0)
+        sys.exit()
 
 
 def decompile_cfr(decompVersion, version,type):
@@ -205,7 +205,7 @@ def decompile_cfr(decompVersion, version,type):
         print(f'ERROR: Missing files: ./lib/cfr-0.146.jar or ./src/{version}-{type}-temp.jar')
         print("Aborting")
         input()
-        exit(0)
+        sys.exit()
 
 
 def get_rid_brackets(input, counter):
@@ -348,7 +348,7 @@ def main():
         print("===FINISHED===")
         print(f"output is in /src/{version}")
         input("Press Enter key to exit")
-        exit(0)
+        sys.exit()
 
     r = input('Download mappings? (y/n): ') or "y"
     if r == 'y':
