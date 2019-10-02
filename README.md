@@ -12,7 +12,7 @@ Of course we provide all that toolchain directly so your output will be readable
 
 You need an internet connection to download the mappings, you can ofc put them in the respective folder if you have them physically
 
-We support linux, MacOS and linux
+We support Windows, MacOS and linux
 
 You need a java runtime inside your path (Java 8 should be good)
 
