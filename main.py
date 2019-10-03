@@ -41,7 +41,7 @@ def download_file(url, filename):
     try:
         print(f'Downloading {filename}...')
         f = urllib.request.urlopen(url)
-        with open(filename, 'wb') as local_file:
+        with open(filename, 'wb+') as local_file:
             local_file.write(f.read())
     except urllib.request.HTTPError as e:
         print('HTTP Error')
@@ -165,7 +165,7 @@ def decompile_fernflower(decompVersion, version,type):
     if path.exists() and fernflower.exists():
         path = path.resolve()
         fernflower = fernflower.resolve()
-        subprocess.run(['java', '-jar', fernflower.__str__(), "-hes=0 -hdc=0 -dgs=1 -ren=1 -log=WARN", path.__str__(), f'./src/{decompVersion}/{type}'], check=True)
+        subprocess.run(['java', "-Xmx1G", "-Xms1G","-jar", fernflower.__str__(), "-hes=0 -hdc=0 -dgs=1 -ren=1 -log=WARN", path.__str__(), f'./src/{decompVersion}/{type}'], check=True)
         print(f'- Removing -> {version}-{type}-temp.jar')
         os.remove(f'./src/{version}-{type}-temp.jar')
         print("Decompressing remapped jar to directory")
@@ -193,7 +193,7 @@ def decompile_cfr(decompVersion, version,type):
     if path.exists() and cfr.exists():
         path = path.resolve()
         cfr = cfr.resolve()
-        subprocess.run(['java', '-jar', cfr.__str__(), path.__str__(), '--outputdir', f'./src/{decompVersion}/{type}', '--caseinsensitivefs', 'true', "--silent", "true"], check=True)
+        subprocess.run(['java', "-Xmx1G", "-Xms1G","-jar", cfr.__str__(), path.__str__(), '--outputdir', f'./src/{decompVersion}/{type}', '--caseinsensitivefs', 'true', "--silent", "true"], check=True)
         print(f'- Removing -> {version}-{type}-temp.jar')
         print(f'- Removing -> summary.txt')
         os.remove(f'./src/{version}-{type}-temp.jar')
@@ -288,7 +288,7 @@ def make_paths(version, type, removal_bool):
     else:
         if removal_bool:
             shutil.rmtree(path)
-
+            path.mkdir(parents=True)
     path = Path(f'versions/{version}')
     if not path.exists():
         path.mkdir(parents=True)
@@ -304,8 +304,10 @@ def make_paths(version, type, removal_bool):
     path = Path(f'versions/{version}/{type}.jar')
     if path.exists() and path.is_file() and removal_bool:
         aw = input(f"versions/{version}/{type}.jar already exists, wipe it (w) or ignore (i) ? ") or "i"
+        path = Path(f'versions/{version}')
         if aw == "w":
             shutil.rmtree(path)
+            path.mkdir(parents=True)
 
     path = Path(f'src/{version}/{type}')
     if not path.exists():
