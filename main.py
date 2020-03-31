@@ -9,13 +9,16 @@ import time
 import urllib.request
 import zipfile
 from pathlib import Path
+from shutil import which
+from subprocess import CalledProcessError
+from urllib.error import HTTPError, URLError
 
 MANIFEST_LOCATION = "https://launchermeta.mojang.com/mc/game/version_manifest.json"
 CLIENT = "client"
 SERVER = "server"
 
 
-def get_minecraft_path():
+def getMinecraftPath():
     if sys.platform.startswith('linux'):
         return Path("~/.minecraft")
     elif sys.platform.startswith('win'):
@@ -27,76 +30,124 @@ def get_minecraft_path():
         sys.exit()
 
 
-mc_path = get_minecraft_path()
+mc_path = getMinecraftPath()
 
 
-def get_manifest():
+def checkjava():
+    """Check for java and setup the proper directory if needed"""
+    results = []
+    if sys.platform.startswith('win'):
+        if not results:
+            import winreg
+
+            for flag in [winreg.KEY_WOW64_64KEY, winreg.KEY_WOW64_32KEY]:
+                try:
+                    k = winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE, r'Software\JavaSoft\Java Development Kit', 0, winreg.KEY_READ | flag)
+                    version, _ = winreg.QueryValueEx(k, 'CurrentVersion')
+                    k.Close()
+                    k = winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE, r'Software\JavaSoft\Java Development Kit\%s' % version, 0, winreg.KEY_READ | flag)
+                    path, _ = winreg.QueryValueEx(k, 'JavaHome')
+                    k.Close()
+                    path = os.path.join(str(path), 'bin')
+                    subprocess.run(['"%s"' % os.path.join(path, 'java'), ' -version'], stdout=open(os.devnull, 'w'), stderr=subprocess.STDOUT, check=True)
+                    results.append(path)
+                except (CalledProcessError, OSError):
+                    pass
+        if not results:
+            try:
+                subprocess.run(['java', '-version'], stdout=open(os.devnull, 'w'), stderr=subprocess.STDOUT, check=True)
+                results.append('')
+            except (CalledProcessError, OSError):
+                pass
+        if not results and 'ProgramW6432' in os.environ:
+            results.extend(which('java.exe', os.environ['ProgramW6432']))
+        if not results and 'ProgramFiles' in os.environ:
+            results.extend(which('java.exe', os.environ['ProgramFiles']))
+        if not results and 'ProgramFiles(x86)' in os.environ:
+            results.extend(which('java.exe', os.environ['ProgramFiles(x86)']))
+    elif sys.platform.startswith('linux') or sys.platform.startswith('darwin'):
+        if not results:
+            try:
+                subprocess.run(['java', '-version'], stdout=open(os.devnull, 'w'), stderr=subprocess.STDOUT, check=True)
+                results.append('')
+            except (CalledProcessError, OSError):
+                pass
+        if not results:
+            results.extend(which('java', path='/usr/bin'))
+        if not results:
+            results.extend(which('java', path='/usr/local/bin'))
+        if not results:
+            results.extend(which('java', path='/opt'))
+    if not results:
+        print('Java JDK is not installed ! Please install java JDK from http://java.oracle.com or OpenJDK')
+        input("Aborting, press anything to exit")
+        sys.exit(1)
+
+
+def getManifest():
     if Path(f"versions/version_manifest.json").exists() and Path(f"versions/version_manifest.json").is_file():
         print("Manifest already existing, not downloading again, if you want to please accept safe removal at beginning")
         return
-    download_file(MANIFEST_LOCATION, f"versions/version_manifest.json")
+    downloadFile(MANIFEST_LOCATION, f"versions/version_manifest.json")
 
 
-def download_file(url, filename):
+def downloadFile(url, filename):
     try:
         print(f'Downloading {filename}...')
         f = urllib.request.urlopen(url)
         with open(filename, 'wb+') as local_file:
             local_file.write(f.read())
-    except urllib.request.HTTPError as e:
+    except HTTPError as e:
         print('HTTP Error')
         print(e)
-    except urllib.request.URLError as e:
+    except URLError as e:
         print('URL Error')
         print(e)
 
 
-def get_version_manifest(target_version):
+def getVersionManifest(target_version):
     if Path(f"versions/{target_version}/version.json").exists() and Path(f"versions/{target_version}/version.json").is_file():
         print("Version manifest already existing, not downloading again, if you want to please accept safe removal at beginning")
         return
-    pathToJson = Path(f'versions/version_manifest.json')
-    if pathToJson.exists() and pathToJson.is_file():
-        pathToJson = pathToJson.resolve()
-        with open(pathToJson) as f:
+    path_to_json = Path(f'versions/version_manifest.json')
+    if path_to_json.exists() and path_to_json.is_file():
+        path_to_json = path_to_json.resolve()
+        with open(path_to_json) as f:
             versions = json.load(f)["versions"]
             for version in versions:
                 if version.get("id") and version.get("id") == target_version and version.get("url"):
-                    download_file(version.get("url"), f"versions/{target_version}/version.json")
+                    downloadFile(version.get("url"), f"versions/{target_version}/version.json")
                     break
     else:
         print('ERROR: Missing manifest file: version.json')
-        print("Aborting")
-        input()
+        input("Aborting, press anything to exit")
         sys.exit()
 
 
-def get_version_jar(target_version, type):
+def getVersionJar(target_version, side):
     path_to_json = Path(f"versions/{target_version}/version.json")
-    if Path(f"versions/{target_version}/{type}.jar").exists() and Path(f"versions/{target_version}/{type}.jar").is_file():
-        print(f"versions/{target_version}/{type}.jar already existing, not downloading again")
+    if Path(f"versions/{target_version}/{side}.jar").exists() and Path(f"versions/{target_version}/{side}.jar").is_file():
+        print(f"versions/{target_version}/{side}.jar already existing, not downloading again")
         return
     if path_to_json.exists() and path_to_json.is_file():
         path_to_json = path_to_json.resolve()
         with open(path_to_json) as f:
             jsn = json.load(f)
-            if jsn.get("downloads") and jsn.get("downloads").get(type) and jsn.get("downloads").get(type).get("url"):
-                download_file(jsn.get("downloads").get(type).get("url"), f"versions/{target_version}/{type}.jar")
+            if jsn.get("downloads") and jsn.get("downloads").get(side) and jsn.get("downloads").get(side).get("url"):
+                downloadFile(jsn.get("downloads").get(side).get("url"), f"versions/{target_version}/{side}.jar")
             else:
                 print("Could not download jar, missing fields")
-                print("Aborting")
-                input()
+                input("Aborting, press anything to exit")
                 sys.exit()
     else:
         print('ERROR: Missing manifest file: version.json')
-        print("Aborting")
-        input()
+        input("Aborting, press anything to exit")
         sys.exit()
     print("Done !")
 
 
-def get_mappings(version, type):
-    if Path(f'mappings/{version}/{type}.txt').exists() and Path(f'mappings/{version}/{type}.txt').is_file():
+def getMappings(version, side):
+    if Path(f'mappings/{version}/{side}.txt').exists() and Path(f'mappings/{version}/{side}.txt').is_file():
         print("Mappings already existing, not downloading again, if you want to please accept safe removal at beginning")
         return
     path_to_json = Path(f'versions/{version}/version.json')
@@ -106,12 +157,12 @@ def get_mappings(version, type):
         with open(path_to_json) as f:
             jfile = json.load(f)
             url = jfile['downloads']
-            if type == CLIENT:  # client:
+            if side == CLIENT:  # client:
                 if url['client_mappings']:
                     url = url['client_mappings']['url']
                 else:
                     print(f'Error: Missing client mappings for {version}')
-            elif type == SERVER:  # server
+            elif side == SERVER:  # server
                 if url['server_mappings']:
                     url = url['server_mappings']['url']
                 else:
@@ -121,114 +172,136 @@ def get_mappings(version, type):
                 sys.exit()
 
             print(f'Downloading the mappings for {version}...')
-            download_file(url, f'mappings/{version}/{"client" if type==CLIENT else "server"}.txt')
+            downloadFile(url, f'mappings/{version}/{"client" if side == CLIENT else "server"}.txt')
     else:
         print('ERROR: Missing manifest file: version.json')
-        print("Aborting")
-        input()
+        input("Aborting, press anything to exit")
         sys.exit()
 
 
-def remap(version, type):
+def remap(version, side):
     print('=== Remapping jar using SpecialSource ====')
     t = time.time()
-    path = Path(f'versions/{version}/{type}.jar')
+    path = Path(f'versions/{version}/{side}.jar')
     if not path.exists() or not path.is_file():
         path_temp = (mc_path / f'versions/{version}/{version}.jar').expanduser()
         if path_temp.exists() and path_temp.is_file():
-            r = input("Error, defaulting to client.jar from your local minecraft folder, continue? (y/n)") or "y"
+            r = input("Error, defaulting to client.jar from your local Minecraft folder, continue? (y/n)") or "y"
             if r != "y":
                 sys.exit()
-            path=path_temp
-    mapp = Path(f'mappings/{version}/{type}.tsrg')
+            path = path_temp
+    mapp = Path(f'mappings/{version}/{side}.tsrg')
     specialsource = Path('./lib/SpecialSource-1.8.6.jar')
     if path.exists() and mapp.exists() and specialsource.exists() and path.is_file() and mapp.is_file() and specialsource.is_file():
         path = path.resolve()
         mapp = mapp.resolve()
         specialsource = specialsource.resolve()
-        subprocess.run(['java', '-jar', specialsource.__str__(), '--in-jar', path.__str__(), '--out-jar', f'./src/{version}-{type}-temp.jar', '--srg-in', mapp.__str__(), "--kill-lvt"], check=True)
-        print(f'- New -> {version}-{type}-temp.jar')
+        subprocess.run(['java',
+                        '-jar', specialsource.__str__(),
+                        '--in-jar', path.__str__(),
+                        '--out-jar', f'./src/{version}-{side}-temp.jar',
+                        '--srg-in', mapp.__str__(),
+                        "--kill-lvt"  # kill snowmen
+                        ], check=True)
+        print(f'- New -> {version}-{side}-temp.jar')
         t = time.time() - t
         print('Done in %.1fs' % t)
     else:
-        print(f'ERROR: Missing files: ./lib/SpecialSource-1.8.6.jar or mappings/{version}/{type}.tsrg or versions/{version}/{type}.jar')
-        print("Aborting")
-        input()
+        print(f'ERROR: Missing files: ./lib/SpecialSource-1.8.6.jar or mappings/{version}/{side}.tsrg or versions/{version}/{side}.jar')
+        input("Aborting, press anything to exit")
         sys.exit()
 
 
-def decompile_fernflower(decompVersion, version,type):
-    print('=== Decompiling using FernFlower (not silent dunno why) ===')
+def decompileFernFlower(decompiled_version, version, side):
+    print('=== Decompiling using FernFlower (silent) ===')
     t = time.time()
-    path = Path(f'./src/{version}-{type}-temp.jar')
+    path = Path(f'./src/{version}-{side}-temp.jar')
     fernflower = Path('./lib/fernflower.jar')
     if path.exists() and fernflower.exists():
         path = path.resolve()
         fernflower = fernflower.resolve()
-        subprocess.run(['java', "-Xmx1G", "-Xms1G","-jar", fernflower.__str__(), "-hes=0 -hdc=0 -dgs=1 -ren=1 -log=WARN", path.__str__(), f'./src/{decompVersion}/{type}'], check=True)
-        print(f'- Removing -> {version}-{type}-temp.jar')
-        os.remove(f'./src/{version}-{type}-temp.jar')
+        subprocess.run(['java',
+                        '-Xmx1G',
+                        '-Xms1G',
+                        '-jar', fernflower.__str__(),
+                        '-hes=0',  # hide empty super invocation deactivated (might clutter but allow following)
+                        '-hdc=0',  # hide empty default constructor deactivated (allow to track)
+                        '-dgs=1',  # decompile generic signatures activated (make sure we can follow types)
+                        '-ren=1',  # rename ambiguous activated
+                        '-lit=1',  # output numeric literals
+                        '-asc=1',  # encode non-ASCII characters in string and character
+                        '-log=WARN',
+                        path.__str__(), f'./src/{decompiled_version}/{side}'
+                        ], check=True)
+        print(f'- Removing -> {version}-{side}-temp.jar')
+        os.remove(f'./src/{version}-{side}-temp.jar')
         print("Decompressing remapped jar to directory")
-        with zipfile.ZipFile(f'./src/{decompVersion}/{type}/{version}-{type}-temp.jar') as z:
-            z.extractall(path=f'./src/{decompVersion}/{type}')
+        with zipfile.ZipFile(f'./src/{decompiled_version}/{side}/{version}-{side}-temp.jar') as z:
+            z.extractall(path=f'./src/{decompiled_version}/{side}')
         t = time.time() - t
         print('Done in %.1fs' % t)
-        print(f'Remove Extra Jar file (file was decompressed in {decompVersion}/{type})? (y/n): ')
+        print(f'Remove Extra Jar file (file was decompressed in {decompiled_version}/{side})? (y/n): ')
         response = input() or "y"
         if response == 'y':
-            print(f'- Removing -> {decompVersion}/{type}/{version}-{type}-temp.jar')
-            os.remove(f'./src/{decompVersion}/{type}/{version}-{type}-temp.jar')
+            print(f'- Removing -> {decompiled_version}/{side}/{version}-{side}-temp.jar')
+            os.remove(f'./src/{decompiled_version}/{side}/{version}-{side}-temp.jar')
     else:
-        print(f'ERROR: Missing files: ./lib/fernflower.jar or ./src/{version}-{type}-temp.jar')
-        print("Aborting")
-        input()
+        print(f'ERROR: Missing files: ./lib/fernflower.jar or ./src/{version}-{side}-temp.jar')
+        input("Aborting, press anything to exit")
         sys.exit()
 
 
-def decompile_cfr(decompVersion, version,type):
+def decompileCFR(decompiled_version, version, side):
     print('=== Decompiling using CFR (silent) ===')
     t = time.time()
-    path = Path(f'./src/{version}-{type}-temp.jar')
+    path = Path(f'./src/{version}-{side}-temp.jar')
     cfr = Path('./lib/cfr-0.146.jar')
     if path.exists() and cfr.exists():
         path = path.resolve()
         cfr = cfr.resolve()
-        subprocess.run(['java', "-Xmx1G", "-Xms1G","-jar", cfr.__str__(), path.__str__(), '--outputdir', f'./src/{decompVersion}/{type}', '--caseinsensitivefs', 'true', "--silent", "true"], check=True)
-        print(f'- Removing -> {version}-{type}-temp.jar')
+        subprocess.run(['java',
+                        '-Xmx1G',
+                        '-Xms1G',
+                        '-jar', cfr.__str__(),
+                        path.__str__(),
+                        '--outputdir', f'./src/{decompiled_version}/{side}',
+                        '--caseinsensitivefs', 'true',
+                        "--silent", "true"
+                        ], check=True)
+        print(f'- Removing -> {version}-{side}-temp.jar')
         print(f'- Removing -> summary.txt')
-        os.remove(f'./src/{version}-{type}-temp.jar')
-        os.remove(f'./src/{decompVersion}/{type}/summary.txt')
+        os.remove(f'./src/{version}-{side}-temp.jar')
+        os.remove(f'./src/{decompiled_version}/{side}/summary.txt')
 
         t = time.time() - t
         print('Done in %.1fs' % t)
     else:
-        print(f'ERROR: Missing files: ./lib/cfr-0.146.jar or ./src/{version}-{type}-temp.jar')
-        print("Aborting")
-        input()
+        print(f'ERROR: Missing files: ./lib/cfr-0.146.jar or ./src/{version}-{side}-temp.jar')
+        input("Aborting, press anything to exit")
         sys.exit()
 
 
-def get_rid_brackets(input, counter):
-    while '[]' in input:  # get rid of the array brackets while counting them
+def removeBrackets(line, counter):
+    while '[]' in line:  # get rid of the array brackets while counting them
         counter += 1
-        input = input[:-2]
-    return input, counter
+        line = line[:-2]
+    return line, counter
 
 
-def remap_mappings(version, type):
-    remapPrimitives = {"int": "I", "double": "D", "boolean": "Z", "float": "F", "long": "J", "byte": "B", "short": "S", "char": "C", "void": "V"}
-    remapFilePath = lambda path: "L" + "/".join(path.split(".")) + ";" if path not in remapPrimitives else remapPrimitives[path]
-    with open(f'mappings/{version}/{type}.txt', 'r') as inputFile:
-        fileName = {}
+def convertMappings(version, side):
+    remap_primitives = {"int": "I", "double": "D", "boolean": "Z", "float": "F", "long": "J", "byte": "B", "short": "S", "char": "C", "void": "V"}
+    remap_file_path = lambda path: "L" + "/".join(path.split(".")) + ";" if path not in remap_primitives else remap_primitives[path]
+    with open(f'mappings/{version}/{side}.txt', 'r') as inputFile:
+        file_name = {}
         for line in inputFile.readlines():
             if line.startswith('#'):  # comment at the top, could be stripped
                 continue
             deobf_name, obf_name = line.split(' -> ')
             if not line.startswith('    '):
                 obf_name = obf_name.split(":")[0]
-                fileName[remapFilePath(deobf_name)] = obf_name  # save it to compare to put the Lb
+                file_name[remap_file_path(deobf_name)] = obf_name  # save it to compare to put the Lb
 
-    with open(f'mappings/{version}/{type}.txt', 'r') as inputFile, open(f'mappings/{version}/{type}.tsrg', 'w+') as outputFile:
+    with open(f'mappings/{version}/{side}.txt', 'r') as inputFile, open(f'mappings/{version}/{side}.tsrg', 'w+') as outputFile:
         for line in inputFile.readlines():
             if line.startswith('#'):  # comment at the top, could be stripped
                 continue
@@ -236,31 +309,31 @@ def remap_mappings(version, type):
             if line.startswith('    '):
                 obf_name = obf_name.rstrip()  # remove leftover right spaces
                 deobf_name = deobf_name.lstrip()  # remove leftover left spaces
-                methodType, methodName = deobf_name.split(" ")  # split the `<methodType> <methodName>`
-                methodType = methodType.split(":")[-1]  # get rid of the line numbers at the beginning for functions eg: `14:32:void`-> `void`
-                if "(" in methodName and ")" in methodName:  # detect a function function
-                    variables = methodName.split('(')[-1].split(')')[0]  # get rid of the function name and parenthesis
-                    functionName = methodName.split('(')[0]  # get the function name only
+                method_type, method_name = deobf_name.split(" ")  # split the `<methodType> <methodName>`
+                method_type = method_type.split(":")[-1]  # get rid of the line numbers at the beginning for functions eg: `14:32:void`-> `void`
+                if "(" in method_name and ")" in method_name:  # detect a function function
+                    variables = method_name.split('(')[-1].split(')')[0]  # get rid of the function name and parenthesis
+                    function_name = method_name.split('(')[0]  # get the function name only
                     array_length_type = 0
 
-                    methodType, array_length_type = get_rid_brackets(methodType, array_length_type)
-                    methodType = remapFilePath(methodType)  # remap the dots to / and add the L ; or remap to a primitives character
-                    methodType = "L" + fileName[methodType] + ";" if methodType in fileName else methodType  # get the obfuscated name of the class
-                    if "." in methodType:  # if the class is already packaged then change the name that the obfuscated gave
-                        methodType = "/".join(methodType.split("."))
+                    method_type, array_length_type = removeBrackets(method_type, array_length_type)
+                    method_type = remap_file_path(method_type)  # remap the dots to / and add the L ; or remap to a primitives character
+                    method_type = "L" + file_name[method_type] + ";" if method_type in file_name else method_type  # get the obfuscated name of the class
+                    if "." in method_type:  # if the class is already packaged then change the name that the obfuscated gave
+                        method_type = "/".join(method_type.split("."))
                     for i in range(array_length_type):  # restore the array brackets upfront
-                        if methodType[-1] == ";":
-                            methodType = "[" + methodType[:-1] + ";"
+                        if method_type[-1] == ";":
+                            method_type = "[" + method_type[:-1] + ";"
                         else:
-                            methodType = "[" + methodType
+                            method_type = "[" + method_type
 
                     if variables != "":  # if there is variables
                         array_length_variables = [0] * len(variables)
                         variables = list(variables.split(","))  # split the variables
                         for i in range(len(variables)):  # remove the array brackets for each variable
-                            variables[i], array_length_variables[i] = get_rid_brackets(variables[i], array_length_variables[i])
-                        variables = [remapFilePath(variable) for variable in variables]  # remap the dots to / and add the L ; or remap to a primitives character
-                        variables = ["L" + fileName[variable] + ";" if variable in fileName else variable for variable in variables]  # get the obfuscated name of the class
+                            variables[i], array_length_variables[i] = removeBrackets(variables[i], array_length_variables[i])
+                        variables = [remap_file_path(variable) for variable in variables]  # remap the dots to / and add the L ; or remap to a primitives character
+                        variables = ["L" + file_name[variable] + ";" if variable in file_name else variable for variable in variables]  # get the obfuscated name of the class
                         variables = ["/".join(variable.split(".")) if "." in variable else variable for variable in variables]  # if the class is already packaged then change the obfuscated name
                         for i in range(len(variables)):  # restore the array brackets upfront for each variable
                             for j in range(array_length_variables[i]):
@@ -270,18 +343,18 @@ def remap_mappings(version, type):
                                     variables[i] = "[" + variables[i]
                         variables = "".join(variables)
 
-                    outputFile.write(f'\t{obf_name} ({variables}){methodType} {functionName}\n')
+                    outputFile.write(f'\t{obf_name} ({variables}){method_type} {function_name}\n')
                 else:
-                    outputFile.write(f'\t{obf_name} {methodName}\n')
+                    outputFile.write(f'\t{obf_name} {method_name}\n')
 
             else:
                 obf_name = obf_name.split(":")[0]
-                outputFile.write(remapFilePath(obf_name)[1:-1] + " " + remapFilePath(deobf_name)[1:-1] + "\n")
+                outputFile.write(remap_file_path(obf_name)[1:-1] + " " + remap_file_path(deobf_name)[1:-1] + "\n")
 
     print("Done !")
 
 
-def make_paths(version, type, removal_bool):
+def makePaths(version, side, removal_bool):
     path = Path(f'mappings/{version}')
     if not path.exists():
         path.mkdir(parents=True)
@@ -301,52 +374,53 @@ def make_paths(version, type, removal_bool):
         if path.is_file() and removal_bool:
             path.unlink()
 
-    path = Path(f'versions/{version}/{type}.jar')
+    path = Path(f'versions/{version}/{side}.jar')
     if path.exists() and path.is_file() and removal_bool:
-        aw = input(f"versions/{version}/{type}.jar already exists, wipe it (w) or ignore (i) ? ") or "i"
+        aw = input(f"versions/{version}/{side}.jar already exists, wipe it (w) or ignore (i) ? ") or "i"
         path = Path(f'versions/{version}')
         if aw == "w":
             shutil.rmtree(path)
             path.mkdir(parents=True)
 
-    path = Path(f'src/{version}/{type}')
+    path = Path(f'src/{version}/{side}')
     if not path.exists():
         path.mkdir(parents=True)
     else:
-        aw = input(f"/src/{version}/{type} already exists, wipe it (w), create a new folder (n) or kill the process (k) ? ")
+        aw = input(f"/src/{version}/{side} already exists, wipe it (w), create a new folder (n) or kill the process (k) ? ")
         if aw == "w":
-            shutil.rmtree(Path(f"./src/{version}/{type}"))
+            shutil.rmtree(Path(f"./src/{version}/{side}"))
         elif aw == "n":
-            version = version + type + "_" + str(random.getrandbits(128))
+            version = version + side + "_" + str(random.getrandbits(128))
         else:
             sys.exit()
-        path = Path(f'src/{version}/{type}')
+        path = Path(f'src/{version}/{side}')
         path.mkdir(parents=True)
     return version
 
 
 def main():
-    print("Decompiling using official mojang mappings...")
-    removal_bool= 1 if input("Do you want to clean up some leftovers? (y/n): ") in ["y","yes"] else 0
-    decompiler = input("Please input you decompiler choice: fernflower (f) or cfr (default: cfr) : ")
-    decompiler = decompiler if decompiler.lower() in ["fernflower", "cfr", "f"] else "cfr"
-    version = input("Please input a valid version starting from 19w36a and 1.14.4 : ") or "1.14.4"
-    type = input("Please select either client or server side (c/s) : ")
-    type = type if type in ["client", "server", "c", "s"] else CLIENT
-    type = CLIENT if type in ["client", "c"] else SERVER
-    decompiled_version = make_paths(version, type,removal_bool)
-    get_manifest()
-    get_version_manifest(version)
-    r = input("Auto Mode? (y/n): ") or "n"
+    checkjava()
+    print("Decompiling using official mojang mappings (Default option are in uppercase, you can just enter)")
+    removal_bool = 1 if input("Do you want to clean up old runs? (y/N): ") in ["y", "yes"] else 0
+    decompiler = input("Please input you decompiler choice: fernflower (f) or cfr (CFR/f): ")
+    decompiler = decompiler.lower() if decompiler.lower() in ["fernflower", "cfr", "f"] else "cfr"
+    version = input("Please input a valid version starting from 19w36a (snapshot) and 1.14.4 (releases), use 'latest' for latest version: ") or "1.14.4"
+    side = input("Please select either client or server side (C/s) : ")
+    side = side.lower() if side.lower() in ["client", "server", "c", "s"] else CLIENT
+    side = CLIENT if side in ["client", "c"] else SERVER
+    decompiled_version = makePaths(version, side, removal_bool)
+    getManifest()
+    getVersionManifest(version)
+    r = input("Auto Mode? (y/N): ") or "n"
     if r == "y":
-        get_mappings(version, type)
-        remap_mappings(version, type)
-        get_version_jar(version, type)
-        remap(version, type)
+        getMappings(version, side)
+        convertMappings(version, side)
+        getVersionJar(version, side)
+        remap(version, side)
         if decompiler.lower() == "cfr":
-            decompile_cfr(decompiled_version, version,type)
+            decompileCFR(decompiled_version, version, side)
         else:
-            decompile_fernflower(decompiled_version, version,type)
+            decompileFernFlower(decompiled_version, version, side)
         print("===FINISHED===")
         print(f"output is in /src/{version}")
         input("Press Enter key to exit")
@@ -354,26 +428,26 @@ def main():
 
     r = input('Download mappings? (y/n): ') or "y"
     if r == 'y':
-        get_mappings(version, type)
+        getMappings(version, side)
 
     r = input('Remap mappings to tsrg? (y/n): ') or "y"
     if r == 'y':
-        remap_mappings(version, type)
+        convertMappings(version, side)
 
-    r = input(f'Get {version}-{type}.jar ? (y/n): ') or "y"
+    r = input(f'Get {version}-{side}.jar ? (y/n): ') or "y"
     if r == "y":
-        get_version_jar(version, type)
+        getVersionJar(version, side)
 
     r = input('Remap? (y/n): ') or "y"
     if r == 'y':
-        remap(version, type)
+        remap(version, side)
 
     r = input('Decompile? (y/n): ') or "y"
     if r == 'y':
         if decompiler.lower() == "cfr":
-            decompile_cfr(decompiled_version, version,type)
+            decompileCFR(decompiled_version, version, side)
         else:
-            decompile_fernflower(decompiled_version, version,type)
+            decompileFernFlower(decompiled_version, version, side)
 
     print("===FINISHED===")
     print(f"output is in /src/{version}")
