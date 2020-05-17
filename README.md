@@ -23,3 +23,10 @@ You can run it directly with python 3.5+ with `python3 main.py`
 There is a common release here:  https://github.com/hube12/DecompilerMC/releases/tag/0.4 for all version
 
 ----
+
+Build command (for executable):
+
+```python
+pip install pyinstaller
+pyinstaller main.py --distpath build --onefile
+```

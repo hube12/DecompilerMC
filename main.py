@@ -433,7 +433,7 @@ def main():
     decompiled_version = makePaths(version, side, removal_bool)
     getManifest()
     getVersionManifest(version)
-    r = input("Auto Mode? (y/N): ") or "n"
+    r = input("Auto Mode? (Y/n): ") or "y"
     if r == "y":
         getMappings(version, side)
         convertMappings(version, side)
