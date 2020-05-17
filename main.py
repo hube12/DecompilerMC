@@ -104,6 +104,20 @@ def downloadFile(url, filename):
         print('URL Error')
         print(e)
 
+def getLatestVersion():
+    downloadFile(MANIFEST_LOCATION, f"manifest.json")
+    path_to_json = Path(f'manifest.json')
+    snapshot=None
+    version=None
+    if path_to_json.exists() and path_to_json.is_file():
+        path_to_json = path_to_json.resolve()
+        with open(path_to_json) as f:
+            versions = json.load(f)["latest"]
+            if versions and versions.get("release") and versions.get("release"):
+                version = versions.get("release")
+                snapshot = versions.get("snapshot")
+    path_to_json.unlink()
+    return snapshot,version           
 
 def getVersionManifest(target_version):
     if Path(f"versions/{target_version}/version.json").exists() and Path(f"versions/{target_version}/version.json").is_file():
@@ -221,7 +235,7 @@ def decompileFernFlower(decompiled_version, version, side):
         path = path.resolve()
         fernflower = fernflower.resolve()
         subprocess.run(['java',
-                        '-Xmx1G',
+                        '-Xmx2G',
                         '-Xms1G',
                         '-jar', fernflower.__str__(),
                         '-hes=0',  # hide empty super invocation deactivated (might clutter but allow following)
@@ -260,7 +274,7 @@ def decompileCFR(decompiled_version, version, side):
         path = path.resolve()
         cfr = cfr.resolve()
         subprocess.run(['java',
-                        '-Xmx1G',
+                        '-Xmx2G',
                         '-Xms1G',
                         '-jar', cfr.__str__(),
                         path.__str__(),
@@ -402,9 +416,17 @@ def main():
     checkjava()
     print("Decompiling using official mojang mappings (Default option are in uppercase, you can just enter)")
     removal_bool = 1 if input("Do you want to clean up old runs? (y/N): ") in ["y", "yes"] else 0
-    decompiler = input("Please input you decompiler choice: fernflower (f) or cfr (CFR/f): ")
+    decompiler = input("Please input you decompiler choice: fernflower or cfr (CFR/f): ")
     decompiler = decompiler.lower() if decompiler.lower() in ["fernflower", "cfr", "f"] else "cfr"
-    version = input("Please input a valid version starting from 19w36a (snapshot) and 1.14.4 (releases), use 'latest' for latest version: ") or "1.14.4"
+    snapshot,latest=getLatestVersion()
+    if snapshot==None or latest==None:
+        print("Error getting latest versions, please refresh cache")
+        exit()
+    version = input(f"""Please input a valid version starting from 19w36a (snapshot) and 1.14.4 (releases),\nUse 'snap' for latest snapshot ({snapshot}) or 'latest' for latest version ({latest}) :""") or "1.15.2"
+    if version in ["snap","s"]:
+        version=snapshot
+    if version in ["latest","l"]:
+        version=latest
     side = input("Please select either client or server side (C/s) : ")
     side = side.lower() if side.lower() in ["client", "server", "c", "s"] else CLIENT
     side = CLIENT if side in ["client", "c"] else SERVER
