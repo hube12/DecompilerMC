@@ -434,7 +434,7 @@ def main():
     getManifest()
     getVersionManifest(version)
     r = input("Auto Mode? (Y/n): ") or "y"
-    if r == "y":
+    if r.lower() == "y":
         getMappings(version, side)
         convertMappings(version, side)
         getVersionJar(version, side)
