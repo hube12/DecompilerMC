@@ -8,6 +8,8 @@ import sys
 import time
 import urllib.request
 import zipfile
+import glob
+from os.path import join, split
 from pathlib import Path
 from shutil import which
 from subprocess import CalledProcessError
@@ -48,8 +50,8 @@ def checkjava():
                     k = winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE, r'Software\JavaSoft\Java Development Kit\%s' % version, 0, winreg.KEY_READ | flag)
                     path, _ = winreg.QueryValueEx(k, 'JavaHome')
                     k.Close()
-                    path = os.path.join(str(path), 'bin')
-                    subprocess.run(['"%s"' % os.path.join(path, 'java'), ' -version'], stdout=open(os.devnull, 'w'), stderr=subprocess.STDOUT, check=True)
+                    path = join(str(path), 'bin')
+                    subprocess.run(['"%s"' % join(path, 'java'), ' -version'], stdout=open(os.devnull, 'w'), stderr=subprocess.STDOUT, check=True)
                     results.append(path)
                 except (CalledProcessError, OSError):
                     pass
@@ -117,7 +119,7 @@ def getLatestVersion():
                 version = versions.get("release")
                 snapshot = versions.get("snapshot")
     path_to_json.unlink()
-    return snapshot,version           
+    return snapshot,version
 
 def getVersionManifest(target_version):
     if Path(f"versions/{target_version}/version.json").exists() and Path(f"versions/{target_version}/version.json").is_file():
@@ -409,7 +411,31 @@ def makePaths(version, side, removal_bool):
             sys.exit()
         path = Path(f'src/{version}/{side}')
         path.mkdir(parents=True)
+
+    path = Path(f'tmp/{version}/{side}')
+    if not path.exists():
+        path.mkdir(parents=True)
+    else:
+        if removal_bool:
+            shutil.rmtree(path)
+            path.mkdir(parents=True)
     return version
+
+
+def deleteDependencies(version, side):
+    path = f'./tmp/{version}'
+    
+    with zipfile.ZipFile(f'./src/{version}-{side}-temp.jar') as z:
+        z.extractall(path=path)
+
+    for dir in [join(path, "com"), path]:
+        for f in os.listdir(dir):
+            if os.path.isdir(join(dir, f)) and split(f)[-1] not in ['net', 'assets', 'data', 'mojang', 'com', 'META-INF']:
+                shutil.rmtree(join(dir, f))
+
+    with zipfile.ZipFile(f'./src/{version}-{side}-temp.jar', 'w') as z:
+        for f in glob.iglob(f'{path}/**', recursive=True):
+            z.write(f, arcname=f[len(path)+1:])
 
 
 def main():
@@ -463,6 +489,10 @@ def main():
     r = input('Remap? (y/n): ') or "y"
     if r == 'y':
         remap(version, side)
+
+    r = input('Delete Dependencies? (y/n): ') or "y"
+    if r == 'y':
+        deleteDependencies(version, side)
 
     r = input('Decompile? (y/n): ') or "y"
     if r == 'y':
