@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import glob
 import json
 import os
 import random
@@ -8,7 +9,6 @@ import sys
 import time
 import urllib.request
 import zipfile
-import glob
 from os.path import join, split
 from pathlib import Path
 from shutil import which
@@ -20,7 +20,7 @@ CLIENT = "client"
 SERVER = "server"
 
 
-def getMinecraftPath():
+def get_minecraft_path():
     if sys.platform.startswith('linux'):
         return Path("~/.minecraft")
     elif sys.platform.startswith('win'):
@@ -32,10 +32,10 @@ def getMinecraftPath():
         sys.exit()
 
 
-mc_path = getMinecraftPath()
+mc_path = get_minecraft_path()
 
 
-def checkjava():
+def check_java():
     """Check for java and setup the proper directory if needed"""
     results = []
     if sys.platform.startswith('win'):
@@ -62,11 +62,11 @@ def checkjava():
             except (CalledProcessError, OSError):
                 pass
         if not results and 'ProgramW6432' in os.environ:
-            results.extend(which('java.exe', os.environ['ProgramW6432']))
+            results.extend(which('java.exe', path=os.environ['ProgramW6432']))
         if not results and 'ProgramFiles' in os.environ:
-            results.extend(which('java.exe', os.environ['ProgramFiles']))
+            results.extend(which('java.exe', path=os.environ['ProgramFiles']))
         if not results and 'ProgramFiles(x86)' in os.environ:
-            results.extend(which('java.exe', os.environ['ProgramFiles(x86)']))
+            results.extend(which('java.exe', path=os.environ['ProgramFiles(x86)']))
     elif sys.platform.startswith('linux') or sys.platform.startswith('darwin'):
         if not results:
             try:
@@ -86,14 +86,14 @@ def checkjava():
         sys.exit(1)
 
 
-def getManifest():
+def get_global_manifest():
     if Path(f"versions/version_manifest.json").exists() and Path(f"versions/version_manifest.json").is_file():
         print("Manifest already existing, not downloading again, if you want to please accept safe removal at beginning")
         return
-    downloadFile(MANIFEST_LOCATION, f"versions/version_manifest.json")
+    download_file(MANIFEST_LOCATION, f"versions/version_manifest.json")
 
 
-def downloadFile(url, filename):
+def download_file(url, filename):
     try:
         print(f'Downloading {filename}...')
         f = urllib.request.urlopen(url)
@@ -106,11 +106,12 @@ def downloadFile(url, filename):
         print('URL Error')
         print(e)
 
-def getLatestVersion():
-    downloadFile(MANIFEST_LOCATION, f"manifest.json")
+
+def get_latest_version():
+    download_file(MANIFEST_LOCATION, f"manifest.json")
     path_to_json = Path(f'manifest.json')
-    snapshot=None
-    version=None
+    snapshot = None
+    version = None
     if path_to_json.exists() and path_to_json.is_file():
         path_to_json = path_to_json.resolve()
         with open(path_to_json) as f:
@@ -119,9 +120,10 @@ def getLatestVersion():
                 version = versions.get("release")
                 snapshot = versions.get("snapshot")
     path_to_json.unlink()
-    return snapshot,version
+    return snapshot, version
 
-def getVersionManifest(target_version):
+
+def get_version_manifest(target_version):
     if Path(f"versions/{target_version}/version.json").exists() and Path(f"versions/{target_version}/version.json").is_file():
         print("Version manifest already existing, not downloading again, if you want to please accept safe removal at beginning")
         return
@@ -132,7 +134,7 @@ def getVersionManifest(target_version):
             versions = json.load(f)["versions"]
             for version in versions:
                 if version.get("id") and version.get("id") == target_version and version.get("url"):
-                    downloadFile(version.get("url"), f"versions/{target_version}/version.json")
+                    download_file(version.get("url"), f"versions/{target_version}/version.json")
                     break
     else:
         print('ERROR: Missing manifest file: version.json')
@@ -140,7 +142,7 @@ def getVersionManifest(target_version):
         sys.exit()
 
 
-def getVersionJar(target_version, side):
+def get_version_jar(target_version, side):
     path_to_json = Path(f"versions/{target_version}/version.json")
     if Path(f"versions/{target_version}/{side}.jar").exists() and Path(f"versions/{target_version}/{side}.jar").is_file():
         print(f"versions/{target_version}/{side}.jar already existing, not downloading again")
@@ -150,7 +152,7 @@ def getVersionJar(target_version, side):
         with open(path_to_json) as f:
             jsn = json.load(f)
             if jsn.get("downloads") and jsn.get("downloads").get(side) and jsn.get("downloads").get(side).get("url"):
-                downloadFile(jsn.get("downloads").get(side).get("url"), f"versions/{target_version}/{side}.jar")
+                download_file(jsn.get("downloads").get(side).get("url"), f"versions/{target_version}/{side}.jar")
             else:
                 print("Could not download jar, missing fields")
                 input("Aborting, press anything to exit")
@@ -162,7 +164,7 @@ def getVersionJar(target_version, side):
     print("Done !")
 
 
-def getMappings(version, side):
+def get_mappings(version, side):
     if Path(f'mappings/{version}/{side}.txt').exists() and Path(f'mappings/{version}/{side}.txt').is_file():
         print("Mappings already existing, not downloading again, if you want to please accept safe removal at beginning")
         return
@@ -188,7 +190,7 @@ def getMappings(version, side):
                 sys.exit()
 
             print(f'Downloading the mappings for {version}...')
-            downloadFile(url, f'mappings/{version}/{"client" if side == CLIENT else "server"}.txt')
+            download_file(url, f'mappings/{version}/{"client" if side == CLIENT else "server"}.txt')
     else:
         print('ERROR: Missing manifest file: version.json')
         input("Aborting, press anything to exit")
@@ -228,7 +230,7 @@ def remap(version, side):
         sys.exit()
 
 
-def decompileFernFlower(decompiled_version, version, side):
+def decompile_fern_flower(decompiled_version, version, side):
     print('=== Decompiling using FernFlower (silent) ===')
     t = time.time()
     path = Path(f'./src/{version}-{side}-temp.jar')
@@ -255,8 +257,8 @@ def decompileFernFlower(decompiled_version, version, side):
         with zipfile.ZipFile(f'./src/{decompiled_version}/{side}/{version}-{side}-temp.jar') as z:
             z.extractall(path=f'./src/{decompiled_version}/{side}')
         t = time.time() - t
-        print('Done in %.1fs' % t)
-        print(f'Remove Extra Jar file (file was decompressed in {decompiled_version}/{side})? (y/n): ')
+        print('Done in %.1fs (file was decompressed in {decompiled_version}/{side})' % t)
+        print(f'Remove Extra Jar file? (y/n): ')
         response = input() or "y"
         if response == 'y':
             print(f'- Removing -> {decompiled_version}/{side}/{version}-{side}-temp.jar')
@@ -267,7 +269,7 @@ def decompileFernFlower(decompiled_version, version, side):
         sys.exit()
 
 
-def decompileCFR(decompiled_version, version, side):
+def decompile_cfr(decompiled_version, version, side):
     print('=== Decompiling using CFR (silent) ===')
     t = time.time()
     path = Path(f'./src/{version}-{side}-temp.jar')
@@ -297,14 +299,14 @@ def decompileCFR(decompiled_version, version, side):
         sys.exit()
 
 
-def removeBrackets(line, counter):
+def remove_brackets(line, counter):
     while '[]' in line:  # get rid of the array brackets while counting them
         counter += 1
         line = line[:-2]
     return line, counter
 
 
-def convertMappings(version, side):
+def convert_mappings(version, side):
     remap_primitives = {"int": "I", "double": "D", "boolean": "Z", "float": "F", "long": "J", "byte": "B", "short": "S", "char": "C", "void": "V"}
     remap_file_path = lambda path: "L" + "/".join(path.split(".")) + ";" if path not in remap_primitives else remap_primitives[path]
     with open(f'mappings/{version}/{side}.txt', 'r') as inputFile:
@@ -332,7 +334,7 @@ def convertMappings(version, side):
                     function_name = method_name.split('(')[0]  # get the function name only
                     array_length_type = 0
 
-                    method_type, array_length_type = removeBrackets(method_type, array_length_type)
+                    method_type, array_length_type = remove_brackets(method_type, array_length_type)
                     method_type = remap_file_path(method_type)  # remap the dots to / and add the L ; or remap to a primitives character
                     method_type = "L" + file_name[method_type] + ";" if method_type in file_name else method_type  # get the obfuscated name of the class
                     if "." in method_type:  # if the class is already packaged then change the name that the obfuscated gave
@@ -347,7 +349,7 @@ def convertMappings(version, side):
                         array_length_variables = [0] * len(variables)
                         variables = list(variables.split(","))  # split the variables
                         for i in range(len(variables)):  # remove the array brackets for each variable
-                            variables[i], array_length_variables[i] = removeBrackets(variables[i], array_length_variables[i])
+                            variables[i], array_length_variables[i] = remove_brackets(variables[i], array_length_variables[i])
                         variables = [remap_file_path(variable) for variable in variables]  # remap the dots to / and add the L ; or remap to a primitives character
                         variables = ["L" + file_name[variable] + ";" if variable in file_name else variable for variable in variables]  # get the obfuscated name of the class
                         variables = ["/".join(variable.split(".")) if "." in variable else variable for variable in variables]  # if the class is already packaged then change the obfuscated name
@@ -370,7 +372,7 @@ def convertMappings(version, side):
     print("Done !")
 
 
-def makePaths(version, side, removal_bool):
+def make_paths(version, side, removal_bool):
     path = Path(f'mappings/{version}')
     if not path.exists():
         path.mkdir(parents=True)
@@ -422,9 +424,9 @@ def makePaths(version, side, removal_bool):
     return version
 
 
-def deleteDependencies(version, side):
-    path = f'./tmp/{version}'
-    
+def delete_dependencies(version, side):
+    path = f'./tmp/{version}/{side}'
+
     with zipfile.ZipFile(f'./src/{version}-{side}-temp.jar') as z:
         z.extractall(path=path)
 
@@ -435,40 +437,41 @@ def deleteDependencies(version, side):
 
     with zipfile.ZipFile(f'./src/{version}-{side}-temp.jar', 'w') as z:
         for f in glob.iglob(f'{path}/**', recursive=True):
-            z.write(f, arcname=f[len(path)+1:])
+            z.write(f, arcname=f[len(path) + 1:])
 
 
 def main():
-    checkjava()
+    check_java()
     print("Decompiling using official mojang mappings (Default option are in uppercase, you can just enter)")
     removal_bool = 1 if input("Do you want to clean up old runs? (y/N): ") in ["y", "yes"] else 0
     decompiler = input("Please input you decompiler choice: fernflower or cfr (CFR/f): ")
     decompiler = decompiler.lower() if decompiler.lower() in ["fernflower", "cfr", "f"] else "cfr"
-    snapshot,latest=getLatestVersion()
-    if snapshot==None or latest==None:
+    snapshot, latest = get_latest_version()
+    if snapshot is None or latest is None:
         print("Error getting latest versions, please refresh cache")
         exit()
-    version = input(f"""Please input a valid version starting from 19w36a (snapshot) and 1.14.4 (releases),\nUse 'snap' for latest snapshot ({snapshot}) or 'latest' for latest version ({latest}) :""") or "1.15.2"
-    if version in ["snap","s"]:
-        version=snapshot
-    if version in ["latest","l"]:
-        version=latest
+    version = input(f"Please input a valid version starting from 19w36a (snapshot) and 1.14.4 (releases),\n" +
+                    "Use 'snap' for latest snapshot ({snapshot}) or 'latest' for latest version ({latest}) :") or latest
+    if version in ["snap", "s"]:
+        version = snapshot
+    if version in ["latest", "l"]:
+        version = latest
     side = input("Please select either client or server side (C/s) : ")
     side = side.lower() if side.lower() in ["client", "server", "c", "s"] else CLIENT
     side = CLIENT if side in ["client", "c"] else SERVER
-    decompiled_version = makePaths(version, side, removal_bool)
-    getManifest()
-    getVersionManifest(version)
+    decompiled_version = make_paths(version, side, removal_bool)
+    get_global_manifest()
+    get_version_manifest(version)
     r = input("Auto Mode? (Y/n): ") or "y"
     if r.lower() == "y":
-        getMappings(version, side)
-        convertMappings(version, side)
-        getVersionJar(version, side)
+        get_mappings(version, side)
+        convert_mappings(version, side)
+        get_version_jar(version, side)
         remap(version, side)
         if decompiler.lower() == "cfr":
-            decompileCFR(decompiled_version, version, side)
+            decompile_cfr(decompiled_version, version, side)
         else:
-            decompileFernFlower(decompiled_version, version, side)
+            decompile_fern_flower(decompiled_version, version, side)
         print("===FINISHED===")
         print(f"output is in /src/{version}")
         input("Press Enter key to exit")
@@ -476,15 +479,15 @@ def main():
 
     r = input('Download mappings? (y/n): ') or "y"
     if r == 'y':
-        getMappings(version, side)
+        get_mappings(version, side)
 
     r = input('Remap mappings to tsrg? (y/n): ') or "y"
     if r == 'y':
-        convertMappings(version, side)
+        convert_mappings(version, side)
 
     r = input(f'Get {version}-{side}.jar ? (y/n): ') or "y"
     if r == "y":
-        getVersionJar(version, side)
+        get_version_jar(version, side)
 
     r = input('Remap? (y/n): ') or "y"
     if r == 'y':
@@ -492,14 +495,14 @@ def main():
 
     r = input('Delete Dependencies? (y/n): ') or "y"
     if r == 'y':
-        deleteDependencies(version, side)
+        delete_dependencies(version, side)
 
     r = input('Decompile? (y/n): ') or "y"
     if r == 'y':
         if decompiler.lower() == "cfr":
-            decompileCFR(decompiled_version, version, side)
+            decompile_cfr(decompiled_version, version, side)
         else:
-            decompileFernFlower(decompiled_version, version, side)
+            decompile_fern_flower(decompiled_version, version, side)
 
     print("===FINISHED===")
     print(f"output is in /src/{version}")
