@@ -2,6 +2,7 @@ dist
 build
 mappings
 src
+tmp
 .idea
 main.spec
 versions
