@@ -62,11 +62,11 @@ def check_java():
             except (CalledProcessError, OSError):
                 pass
         if not results and 'ProgramW6432' in os.environ:
-            results.extend(which('java.exe', path=os.environ['ProgramW6432']))
+            results.append(which('java.exe', path=os.environ['ProgramW6432']))
         if not results and 'ProgramFiles' in os.environ:
-            results.extend(which('java.exe', path=os.environ['ProgramFiles']))
+            results.append(which('java.exe', path=os.environ['ProgramFiles']))
         if not results and 'ProgramFiles(x86)' in os.environ:
-            results.extend(which('java.exe', path=os.environ['ProgramFiles(x86)']))
+            results.append(which('java.exe', path=os.environ['ProgramFiles(x86)']))
     elif sys.platform.startswith('linux') or sys.platform.startswith('darwin'):
         if not results:
             try:
@@ -75,11 +75,12 @@ def check_java():
             except (CalledProcessError, OSError):
                 pass
         if not results:
-            results.extend(which('java', path='/usr/bin'))
+            results.append(which('java', path='/usr/bin'))
         if not results:
-            results.extend(which('java', path='/usr/local/bin'))
+            results.append(which('java', path='/usr/local/bin'))
         if not results:
-            results.extend(which('java', path='/opt'))
+            results.append(which('java', path='/opt'))
+    results = [path for path in results if path is not None]
     if not results:
         print('Java JDK is not installed ! Please install java JDK from http://java.oracle.com or OpenJDK')
         input("Aborting, press anything to exit")
