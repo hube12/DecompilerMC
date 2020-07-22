@@ -452,7 +452,7 @@ def main():
         print("Error getting latest versions, please refresh cache")
         exit()
     version = input(f"Please input a valid version starting from 19w36a (snapshot) and 1.14.4 (releases),\n" +
-                    "Use 'snap' for latest snapshot ({snapshot}) or 'latest' for latest version ({latest}) :") or latest
+                    f"Use 'snap' for latest snapshot ({snapshot}) or 'latest' for latest version ({latest}) :") or latest
     if version in ["snap", "s"]:
         version = snapshot
     if version in ["latest", "l"]:
