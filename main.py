@@ -449,6 +449,16 @@ def delete_dependencies(version, side):
         for f in glob.iglob(f'{path}/**', recursive=True):
             z.write(f, arcname=f[len(path) + 1:])
 
+def create_eclipse_project():
+    with open("classpath_template", "r") as file:
+        classpath = file.read()
+    libs = ""
+    with open(path_to_json, "r") as file:
+        for librarie in json.load(file)["libraries"]:
+            libs += '        <classpathentry kind="lib" path="{}"/>\n'.format(librarie["downloads"]["artifact"]["path"])
+    classpath = classpath.format(version, version, libs)
+    with open(".classpath", "w") as file:
+        file.write(classpath)
 
 def main():
     check_java()
@@ -513,6 +523,10 @@ def main():
             decompile_cfr(decompiled_version, version, side)
         else:
             decompile_fern_flower(decompiled_version, version, side)
+
+    r = input('Create Eclipse project? (y/n): ') or "y"
+    if r == 'y':
+        create_eclipse_project()
 
     print("===FINISHED===")
     print(f"output is in /src/{version}")

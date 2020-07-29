@@ -7,3 +7,8 @@ tmp
 main.spec
 versions
 __pycache__
+libraries
+.classpath
+.settings
+.project
+*.jar
