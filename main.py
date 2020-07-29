@@ -99,7 +99,7 @@ def download_file(url, filename):
         print(f'Downloading {filename}...')
         f = urllib.request.urlopen(url)
         try:
-            os.makedirs(os.path.sep.join(filename.split(os.path.sep)[:filename.count(os.path.sep) - 1]), exist_ok=True)
+            os.makedirs(os.path.sep.join(filename.split(os.path.sep)[:filename.count(os.path.sep)]), exist_ok=True)
         except:
             pass
         with open(filename, 'wb+') as local_file:
