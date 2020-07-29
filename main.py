@@ -125,7 +125,7 @@ def get_latest_version():
 
 
 def get_version_manifest(target_version):
-    if Path(f"versions/{target_version}/version.json").exists() and Path(f"versions/{target_version}/version.json").is_file():
+    if Path(f"versions/{target_version}/version.json").exists() and Path(f"versions/{target_version}/version.json").is_file():
         print("Version manifest already existing, not downloading again, if you want to please accept safe removal at beginning")
         return
     path_to_json = Path(f'versions/version_manifest.json')
@@ -158,6 +158,11 @@ def get_version_jar(target_version, side):
                 print("Could not download jar, missing fields")
                 input("Aborting, press anything to exit")
                 sys.exit()
+            for lib in jsn.get("libraries"):
+                try:
+                    download_file(lib["artifact"]["url"], f"libraries/{lib['artifact']['path']}")
+                except:
+                    print("Missing: " + lib["url"])
     else:
         print('ERROR: Missing manifest file: version.json')
         input("Aborting, press anything to exit")
