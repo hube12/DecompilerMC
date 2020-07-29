@@ -98,6 +98,10 @@ def download_file(url, filename):
     try:
         print(f'Downloading {filename}...')
         f = urllib.request.urlopen(url)
+        try:
+            os.makedirs(os.path.sep.join(filename.split(os.path.sep)[:filename.count(os.path.sep) - 1]), exist_ok=True)
+        except:
+            pass
         with open(filename, 'wb+') as local_file:
             local_file.write(f.read())
     except HTTPError as e:
@@ -160,9 +164,9 @@ def get_version_jar(target_version, side):
                 sys.exit()
             for lib in jsn.get("libraries"):
                 try:
-                    download_file(lib["artifact"]["url"], f"libraries/{lib['artifact']['path']}")
-                except:
-                    print("Missing: " + lib["url"])
+                    download_file(lib["downloads"]["artifact"]["url"], f"libraries/{lib['downloads']['artifact']['path']}")
+                except Exception as e:
+                    print(f"Missing ({e}): " + lib["downloads"]["artifact"]["url"])
     else:
         print('ERROR: Missing manifest file: version.json')
         input("Aborting, press anything to exit")
