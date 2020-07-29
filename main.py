@@ -457,7 +457,7 @@ def create_eclipse_project(target_version, side):
     with open(path_to_json, "r") as file:
         for librarie in json.load(file)["libraries"]:
             libs += '        <classpathentry kind="lib" path="{}"/>\n'.format(librarie["downloads"]["artifact"]["path"])
-    classpath = classpath.format(version, side, version, libs)
+    classpath = classpath.format(target_version, side, target_version, libs)
     with open(".classpath", "w") as file:
         file.write(classpath)
 
