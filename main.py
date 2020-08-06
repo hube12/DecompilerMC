@@ -455,8 +455,12 @@ def create_eclipse_project(target_version, side):
         classpath = file.read()
     libs = ""
     with open(path_to_json, "r") as file:
+        done = []
         for library in json.load(file)["libraries"]:
-            libs += '        <classpathentry kind="lib" path="{}"></classpathentry>\n'.format(library["downloads"]["artifact"]["path"])
+            if library["downloads"]["artifact"]["path"] in done:
+                continue
+            libs += '        <classpathentry kind="lib" path="{}"></classpathentry>\n'.format("../../../libraries/" + library["downloads"]["artifact"]["path"])
+            done.append(library["downloads"]["artifact"]["path"])
             print("Including", library["downloads"]["artifact"]["path"])
     classpath = classpath.format(target_version, side, target_version, libs)
     with open(os.path.join("src", target_version, side, ".classpath"), "w") as file:
