@@ -129,7 +129,7 @@ def get_latest_version():
 
 
 def get_version_manifest(target_version):
-    if Path(f"versions/{target_version}/version.json").exists() and Path(f"versions/{target_version}/version.json").is_file():
+    if Path(f"versions/{target_version}/version.json").exists() and Path(f"versions/{target_version}/version.json").is_file():
         print("Version manifest already existing, not downloading again, if you want to please accept safe removal at beginning")
         return
     path_to_json = Path(f'versions/version_manifest.json')
