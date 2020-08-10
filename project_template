@@ -3,6 +3,15 @@
 	<name>{}</name>
 	<comment></comment>
 	<projects></projects>
-	<buildSpec></buildSpec>
-	<natures></natures>
+	<natures>
+                <nature>org.eclipse.jdt.core.javanature</nature>
+        </natures>
+        <buildSpec>
+                <buildCommand>
+                        <name>org.eclipse.jdt.core.javabuilder</name>
+                        <arguments/>
+                </buildCommand>
+        </buildSpec>
+        <linkedResources/>
+        <filteredResources/>
 </projectDescription>
