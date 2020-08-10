@@ -465,6 +465,11 @@ def create_eclipse_project(target_version, side):
     classpath = classpath.format(target_version, side, target_version, libs)
     with open(os.path.join("src", target_version, side, ".classpath"), "w") as file:
         file.write(classpath)
+    with open("project_template", "r") as file:
+        project = file.read()
+    project = project.format(target_version + "_" + side)
+    with open(os.path.join("src", target_version, side, ".project"), "w") as file:
+        file.write(project)
 
 def main():
     check_java()
