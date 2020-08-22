@@ -24,6 +24,64 @@ There is a common release here:  https://github.com/hube12/DecompilerMC/releases
 
 ----
 
+Use arguments, this is not required and once you pass a mcversion it will by default use the command.
+
+We recommend using -q everytime otherwise it might ask stdin questions.
+
+By default we employ the nice strategy which is if the folder exist we create a new random one, please consider using -f, 
+if you actually need a specific path.
+
+Examples:
+- Decompile latest release without any output: `python3 main.py --mcv latest -q` 
+- Decompile latest snapshot server side with output: `python3 main.py --mcversion snap --side server` 
+- Decompile latest snapshot client side with output and not automatic with forcing delete of old runs: 
+
+    `python3 main.py -mcv 1.14.4 -s client -na -f -rmap -rjar -dm -dj -dd -dec -q -c` 
+
+
+```bash
+
+usage: main.py [-h] [--mcversion MCVERSION] [--side SIDE] [--clean] [--force]
+               [--forceno] [--decompiler DECOMPILER] [--nauto]
+               [--download_mapping DOWNLOAD_MAPPING]
+               [--remap_mapping [REMAP_MAPPING]]
+               [--download_jar [DOWNLOAD_JAR]] [--remap_jar [REMAP_JAR]]
+               [--delete_dep [DELETE_DEP]] [--decompile [DECOMPILE]] [--quiet]
+
+Decompile Minecraft source code
+
+optional arguments:
+  -h, --help            show this help message and exit
+  --mcversion MCVERSION, -mcv MCVERSION
+                        The version you want to decompile (alid version
+                        starting from 19w36a (snapshot) and 1.14.4 (releases))
+                        Use 'snap' for latest snapshot (1.16.2) or 'latest'
+                        for latest version (1.16.2)
+  --side SIDE, -s SIDE  The side you want to decompile (either client or
+                        server)
+  --clean, -c           Clean old runs
+  --force, -f           Force resolving conflict by replacing old files.
+  --forceno, -fn        Force resolving conflict by creating new directories.
+  --decompiler DECOMPILER, -d DECOMPILER
+                        Choose between fernflower and cfr.
+  --nauto, -na          Choose between auto and manual mode.
+  --download_mapping DOWNLOAD_MAPPING, -dm DOWNLOAD_MAPPING
+                        Download the mappings (only if auto off)
+  --remap_mapping [REMAP_MAPPING], -rmap [REMAP_MAPPING]
+                        Remap the mappings to tsrg (only if auto off)
+  --download_jar [DOWNLOAD_JAR], -dj [DOWNLOAD_JAR]
+                        Download the jar (only if auto off)
+  --remap_jar [REMAP_JAR], -rjar [REMAP_JAR]
+                        Remap the jar (only if auto off)
+  --delete_dep [DELETE_DEP], -dd [DELETE_DEP]
+                        Delete the dependencies (only if auto off)
+  --decompile [DECOMPILE], -dec [DECOMPILE]
+                        Decompile (only if auto off)
+  --quiet, -q           Doesnt display the messages
+```
+
+----
+
 Build command (for executable):
 
 ```python
