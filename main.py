@@ -36,6 +36,17 @@ def get_minecraft_path():
 mc_path = get_minecraft_path()
 
 
+def str2bool(v):
+    if isinstance(v, bool):
+        return v
+    if v.lower() in ('yes', 'true', 't', 'y', '1'):
+        return True
+    elif v.lower() in ('no', 'false', 'f', 'n', '0'):
+        return False
+    else:
+        raise argparse.ArgumentTypeError('Boolean value expected.')
+
+
 def check_java():
     """Check for java and setup the proper directory if needed"""
     results = []
@@ -185,7 +196,8 @@ def get_mappings(version, side, quiet):
         return
     path_to_json = Path(f'versions/{version}/version.json')
     if path_to_json.exists() and path_to_json.is_file():
-        print(f'Found {version}.json')
+        if not quiet:
+            print(f'Found {version}.json')
         path_to_json = path_to_json.resolve()
         with open(path_to_json) as f:
             jfile = json.load(f)
@@ -241,7 +253,7 @@ def remap(version, side, quiet):
                         '--out-jar', f'./src/{version}-{side}-temp.jar',
                         '--srg-in', mapp.__str__(),
                         "--kill-lvt"  # kill snowmen
-                        ], check=True,capture_output=quiet)
+                        ], check=True, capture_output=quiet)
         if not quiet:
             print(f'- New -> {version}-{side}-temp.jar')
             t = time.time() - t
@@ -274,7 +286,7 @@ def decompile_fern_flower(decompiled_version, version, side, quiet, force):
                         '-asc=1',  # encode non-ASCII characters in string and character
                         '-log=WARN',
                         path.__str__(), f'./src/{decompiled_version}/{side}'
-                        ], check=True,capture_output=quiet)
+                        ], check=True, capture_output=quiet)
         if not quiet:
             print(f'- Removing -> {version}-{side}-temp.jar')
         os.remove(f'./src/{version}-{side}-temp.jar')
@@ -317,7 +329,7 @@ def decompile_cfr(decompiled_version, version, side, quiet):
                         '--outputdir', f'./src/{decompiled_version}/{side}',
                         '--caseinsensitivefs', 'true',
                         "--silent", "true"
-                        ], check=True,capture_output=quiet)
+                        ], check=True, capture_output=quiet)
         if not quiet:
             print(f'- Removing -> {version}-{side}-temp.jar')
             print(f'- Removing -> summary.txt')
@@ -495,31 +507,31 @@ def main():
     parser.add_argument('--mcversion', '-mcv', type=str, dest='mcversion',
                         help=f"The version you want to decompile (alid version starting from 19w36a (snapshot) and 1.14.4 (releases))\n"
                              f"Use 'snap' for latest snapshot ({snapshot}) or 'latest' for latest version ({latest})")
-    parser.add_argument('--side', '-s', type=str, dest='side',default="client",
+    parser.add_argument('--side', '-s', type=str, dest='side', default="client",
                         help='The side you want to decompile (either client or server)')
-    parser.add_argument('--clean', '-c', type=bool, dest='clean', default=False,
+    parser.add_argument('--clean', '-c', dest='clean', action='store_true', default=False,
                         help=f"Clean old runs")
-    parser.add_argument('--force', '-f', dest='force',action='store_true', default=False,
+    parser.add_argument('--force', '-f', dest='force', action='store_true', default=False,
                         help=f"Force resolving conflict by replacing old files.")
-    parser.add_argument('--forceno', '-fn', dest='forceno',action='store_false', default=True,
+    parser.add_argument('--forceno', '-fn', dest='forceno', action='store_false', default=True,
                         help=f"Force resolving conflict by creating new directories.")
     parser.add_argument('--decompiler', '-d', type=str, dest='decompiler', default="cfr",
                         help=f"Choose between fernflower and cfr.")
-    parser.add_argument('--auto', '-a', type=bool, dest='auto', default=True,
+    parser.add_argument('--nauto', '-na', dest='nauto', action='store_true', default=False,
                         help=f"Choose between auto and manual mode.")
-    parser.add_argument('--download_mapping', '-dm', type=bool, dest='download_mapping', default=True,
-                        required="--auto" in sys.argv or "-a" in sys.argv, help=f"Download the mappings (only if auto off)")
-    parser.add_argument('--remap_mapping', '-rmap', type=bool, dest='remap_mapping', default=True,
-                        required="--auto" in sys.argv or "-a" in sys.argv, help=f"Remap the mappings to tsrg (only if auto off)")
-    parser.add_argument('--download_jar', '-dj', type=bool, dest='download_jar', default=True,
-                        required="--auto" in sys.argv or "-a" in sys.argv, help=f"Download the jar (only if auto off)")
-    parser.add_argument('--remap_jar', '-rjar', type=bool, dest='remap_jar', default=True,
-                        required="--auto" in sys.argv or "-a" in sys.argv, help=f"Remap the jar (only if auto off)")
-    parser.add_argument('--delete_dep', '-dd', type=bool, dest='delete_dep', default=True,
-                        required="--auto" in sys.argv or "-a" in sys.argv, help=f"Delete the dependencies (only if auto off)")
-    parser.add_argument('--decompile', '-dec', type=bool, dest='decompile', default=True,
-                        required="--auto" in sys.argv or "-a" in sys.argv, help=f"Delecompile (only if auto off)")
-    parser.add_argument('--quiet', '-q', dest='quiet', action='store_true',default=False, help=f"Doesnt display the messages")
+    parser.add_argument('--download_mapping', '-dm', nargs='?', const=True, type=str2bool, dest='download_mapping', default=True,
+                        required="--nauto" in sys.argv or "-na" in sys.argv, help=f"Download the mappings (only if auto off)")
+    parser.add_argument('--remap_mapping', '-rmap', nargs='?', const=True, type=str2bool, dest='remap_mapping', default=True,
+                        required="--nauto" in sys.argv or "-na" in sys.argv, help=f"Remap the mappings to tsrg (only if auto off)")
+    parser.add_argument('--download_jar', '-dj', nargs='?', const=True, type=str2bool, dest='download_jar', default=True,
+                        required="--nauto" in sys.argv or "-na" in sys.argv, help=f"Download the jar (only if auto off)")
+    parser.add_argument('--remap_jar', '-rjar', nargs='?', const=True, type=str2bool, dest='remap_jar', default=True,
+                        required="--nauto" in sys.argv or "-na" in sys.argv, help=f"Remap the jar (only if auto off)")
+    parser.add_argument('--delete_dep', '-dd', nargs='?', const=True, type=str2bool, dest='delete_dep', default=True,
+                        required="--nauto" in sys.argv or "-na" in sys.argv, help=f"Delete the dependencies (only if auto off)")
+    parser.add_argument('--decompile', '-dec', nargs='?', const=True, type=str2bool, dest='decompile', default=True,
+                        required="--nauto" in sys.argv or "-na" in sys.argv, help=f"Decompile (only if auto off)")
+    parser.add_argument('--quiet', '-q', dest='quiet', action='store_true', default=False, help=f"Doesnt display the messages")
     use_flags = False
     args = parser.parse_args()
     if args.mcversion:
@@ -557,7 +569,7 @@ def main():
     get_global_manifest(args.quiet)
     get_version_manifest(version, args.quiet)
     if use_flags:
-        r = args.auto
+        r = not args.nauto
     else:
         r = input("Auto Mode? (Y/n): ") or "y"
         r = r.lower() == "y"
