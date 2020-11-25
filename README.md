@@ -34,9 +34,7 @@ if you actually need a specific path.
 Examples:
 - Decompile latest release without any output: `python3 main.py --mcv latest -q` 
 - Decompile latest snapshot server side with output: `python3 main.py --mcversion snap --side server` 
-- Decompile latest snapshot client side with output and not automatic with forcing delete of old runs: 
-
-    `python3 main.py -mcv 1.14.4 -s client -na -f -rmap -rjar -dm -dj -dd -dec -q -c` 
+- Decompile 1.14.4 client side with output and not automatic with forcing delete of old runs:  `python3 main.py -mcv 1.14.4 -s client -na -f -rmap -rjar -dm -dj -dd -dec -q -c` 
 
 
 ```bash
