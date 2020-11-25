@@ -51,10 +51,10 @@ Decompile Minecraft source code
 optional arguments:
   -h, --help            show this help message and exit
   --mcversion MCVERSION, -mcv MCVERSION
-                        The version you want to decompile (alid version
+                        The version you want to decompile (all versions
                         starting from 19w36a (snapshot) and 1.14.4 (releases))
-                        Use 'snap' for latest snapshot (1.16.2) or 'latest'
-                        for latest version (1.16.2)
+                        Use 'snap' for latest snapshot (20w48a for example, it will get it automatically) or 'latest'
+                        for latest version (1.16.4 for example, it will get it automatically)
   --side SIDE, -s SIDE  The side you want to decompile (either client or
                         server)
   --clean, -c           Clean old runs
@@ -75,7 +75,7 @@ optional arguments:
                         Delete the dependencies (only if auto off)
   --decompile [DECOMPILE], -dec [DECOMPILE]
                         Decompile (only if auto off)
-  --quiet, -q           Doesnt display the messages
+  --quiet, -q           Doesn't display the messages
 ```
 
 ----
