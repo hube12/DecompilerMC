@@ -18,17 +18,17 @@ You need a java runtime inside your path (Java 8 should be good)
 
 CFR decompilation is approximately 60s and fernflower takes roughly 200s, please give it time
 
-You can run it directly with python 3.5+ with `python3 main.py`
+You can run it directly with python 3.7+ with `python3 main.py`
 
 There is a common release here:  https://github.com/hube12/DecompilerMC/releases/tag/0.4 for all version
 
 ----
 
-Use arguments, this is not required and once you pass a mcversion it will by default use the command.
+You can use arguments instead of terminal based choice, this is not required but once you pass a mcversion it will start the process
 
 We recommend using -q everytime otherwise it might ask stdin questions.
 
-By default we employ the nice strategy which is if the folder exist we create a new random one, please consider using -f, 
+By default we employ the nice guy strategy which is if the folder exist we create a new random one, please consider using -f, 
 if you actually need a specific path.
 
 Examples:
