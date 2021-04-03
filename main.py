@@ -25,11 +25,11 @@ SERVER = "server"
 
 def get_minecraft_path():
     if sys.platform.startswith('linux'):
-        return Path("~/.minecraft")
+        return Path.home() / '.minecraft'
     elif sys.platform.startswith('win'):
-        return Path("~/AppData/Roaming/.minecraft")
+        return Path.home() / 'AppData/Roaming/.minecraft'
     elif sys.platform.startswith('darwin'):
-        return Path("~/Library/Application Support/minecraft")
+        return Path.home() / "Library/Application Support/minecraft"
     else:
         print("Cannot detect of version : %s. Please report to your closest sysadmin" % sys.platform)
         sys.exit(-1)
