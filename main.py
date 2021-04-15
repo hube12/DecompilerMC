@@ -277,7 +277,7 @@ def decompile_fern_flower(decompiled_version, version, side, quiet, force):
         path = path.resolve()
         fernflower = fernflower.resolve()
         subprocess.run(['java',
-                        '-Xmx2G',
+                        '-Xmx4G',
                         '-Xms1G',
                         '-jar', fernflower.__str__(),
                         '-hes=0',  # hide empty super invocation deactivated (might clutter but allow following)
@@ -324,7 +324,7 @@ def decompile_cfr(decompiled_version, version, side, quiet):
         path = path.resolve()
         cfr = cfr.resolve()
         subprocess.run(['java',
-                        '-Xmx2G',
+                        '-Xmx4G',
                         '-Xms1G',
                         '-jar', cfr.__str__(),
                         path.__str__(),
