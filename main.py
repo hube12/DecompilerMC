@@ -58,14 +58,18 @@ def check_java():
 
             for flag in [winreg.KEY_WOW64_64KEY, winreg.KEY_WOW64_32KEY]:
                 try:
-                    k = winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE, r'Software\JavaSoft\Java Development Kit', 0, winreg.KEY_READ | flag)
+                    k = winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE, r'Software\JavaSoft\Java Development Kit', 0,
+                                       winreg.KEY_READ | flag)
                     version, _ = winreg.QueryValueEx(k, 'CurrentVersion')
                     k.Close()
-                    k = winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE, r'Software\JavaSoft\Java Development Kit\%s' % version, 0, winreg.KEY_READ | flag)
+                    k = winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE,
+                                       r'Software\JavaSoft\Java Development Kit\%s' % version, 0,
+                                       winreg.KEY_READ | flag)
                     path, _ = winreg.QueryValueEx(k, 'JavaHome')
                     k.Close()
                     path = join(str(path), 'bin')
-                    subprocess.run(['"%s"' % join(path, 'java'), ' -version'], stdout=open(os.devnull, 'w'), stderr=subprocess.STDOUT, check=True)
+                    subprocess.run(['"%s"' % join(path, 'java'), ' -version'], stdout=open(os.devnull, 'w'),
+                                   stderr=subprocess.STDOUT, check=True)
                     results.append(path)
                 except (CalledProcessError, OSError):
                     pass
@@ -104,7 +108,8 @@ def check_java():
 def get_global_manifest(quiet):
     if Path(f"versions/version_manifest.json").exists() and Path(f"versions/version_manifest.json").is_file():
         if not quiet:
-            print("Manifest already existing, not downloading again, if you want to please accept safe removal at beginning")
+            print(
+                "Manifest already existing, not downloading again, if you want to please accept safe removal at beginning")
         return
     download_file(MANIFEST_LOCATION, f"versions/version_manifest.json", quiet)
 
@@ -145,9 +150,11 @@ def get_latest_version():
 
 
 def get_version_manifest(target_version, quiet):
-    if Path(f"versions/{target_version}/version.json").exists() and Path(f"versions/{target_version}/version.json").is_file():
+    if Path(f"versions/{target_version}/version.json").exists() and Path(
+        f"versions/{target_version}/version.json").is_file():
         if not quiet:
-            print("Version manifest already existing, not downloading again, if you want to please accept safe removal at beginning")
+            print(
+                "Version manifest already existing, not downloading again, if you want to please accept safe removal at beginning")
         return
     path_to_json = Path(f'versions/version_manifest.json')
     if path_to_json.exists() and path_to_json.is_file():
@@ -167,7 +174,8 @@ def get_version_manifest(target_version, quiet):
 
 def get_version_jar(target_version, side, quiet):
     path_to_json = Path(f"versions/{target_version}/version.json")
-    if Path(f"versions/{target_version}/{side}.jar").exists() and Path(f"versions/{target_version}/{side}.jar").is_file():
+    if Path(f"versions/{target_version}/{side}.jar").exists() and Path(
+        f"versions/{target_version}/{side}.jar").is_file():
         if not quiet:
             print(f"versions/{target_version}/{side}.jar already existing, not downloading again")
         return
@@ -194,7 +202,8 @@ def get_version_jar(target_version, side, quiet):
 def get_mappings(version, side, quiet):
     if Path(f'mappings/{version}/{side}.txt').exists() and Path(f'mappings/{version}/{side}.txt').is_file():
         if not quiet:
-            print("Mappings already existing, not downloading again, if you want to please accept safe removal at beginning")
+            print(
+                "Mappings already existing, not downloading again, if you want to please accept safe removal at beginning")
         return
     path_to_json = Path(f'versions/{version}/version.json')
     if path_to_json.exists() and path_to_json.is_file():
@@ -262,7 +271,8 @@ def remap(version, side, quiet):
             print('Done in %.1fs' % t)
     else:
         if not quiet:
-            print(f'ERROR: Missing files: ./lib/SpecialSource-1.8.6.jar or mappings/{version}/{side}.tsrg or versions/{version}/{side}.jar')
+            print(
+                f'ERROR: Missing files: ./lib/SpecialSource-1.8.6.jar or mappings/{version}/{side}.tsrg or versions/{version}/{side}.jar')
             input("Aborting, press anything to exit")
         sys.exit(-1)
 
@@ -355,8 +365,10 @@ def remove_brackets(line, counter):
 
 
 def convert_mappings(version, side, quiet):
-    remap_primitives = {"int": "I", "double": "D", "boolean": "Z", "float": "F", "long": "J", "byte": "B", "short": "S", "char": "C", "void": "V"}
-    remap_file_path = lambda path: "L" + "/".join(path.split(".")) + ";" if path not in remap_primitives else remap_primitives[path]
+    remap_primitives = {"int": "I", "double": "D", "boolean": "Z", "float": "F", "long": "J", "byte": "B", "short": "S",
+                        "char": "C", "void": "V"}
+    remap_file_path = lambda path: "L" + "/".join(path.split(".")) + ";" if path not in remap_primitives else \
+    remap_primitives[path]
     with open(f'mappings/{version}/{side}.txt', 'r') as inputFile:
         file_name = {}
         for line in inputFile.readlines():
@@ -367,7 +379,8 @@ def convert_mappings(version, side, quiet):
                 obf_name = obf_name.split(":")[0]
                 file_name[remap_file_path(deobf_name)] = obf_name  # save it to compare to put the Lb
 
-    with open(f'mappings/{version}/{side}.txt', 'r') as inputFile, open(f'mappings/{version}/{side}.tsrg', 'w+') as outputFile:
+    with open(f'mappings/{version}/{side}.txt', 'r') as inputFile, open(f'mappings/{version}/{side}.tsrg',
+                                                                        'w+') as outputFile:
         for line in inputFile.readlines():
             if line.startswith('#'):  # comment at the top, could be stripped
                 continue
@@ -376,15 +389,18 @@ def convert_mappings(version, side, quiet):
                 obf_name = obf_name.rstrip()  # remove leftover right spaces
                 deobf_name = deobf_name.lstrip()  # remove leftover left spaces
                 method_type, method_name = deobf_name.split(" ")  # split the `<methodType> <methodName>`
-                method_type = method_type.split(":")[-1]  # get rid of the line numbers at the beginning for functions eg: `14:32:void`-> `void`
+                method_type = method_type.split(":")[
+                    -1]  # get rid of the line numbers at the beginning for functions eg: `14:32:void`-> `void`
                 if "(" in method_name and ")" in method_name:  # detect a function function
                     variables = method_name.split('(')[-1].split(')')[0]  # get rid of the function name and parenthesis
                     function_name = method_name.split('(')[0]  # get the function name only
                     array_length_type = 0
 
                     method_type, array_length_type = remove_brackets(method_type, array_length_type)
-                    method_type = remap_file_path(method_type)  # remap the dots to / and add the L ; or remap to a primitives character
-                    method_type = "L" + file_name[method_type] + ";" if method_type in file_name else method_type  # get the obfuscated name of the class
+                    method_type = remap_file_path(
+                        method_type)  # remap the dots to / and add the L ; or remap to a primitives character
+                    method_type = "L" + file_name[
+                        method_type] + ";" if method_type in file_name else method_type  # get the obfuscated name of the class
                     if "." in method_type:  # if the class is already packaged then change the name that the obfuscated gave
                         method_type = "/".join(method_type.split("."))
                     for i in range(array_length_type):  # restore the array brackets upfront
@@ -397,10 +413,14 @@ def convert_mappings(version, side, quiet):
                         array_length_variables = [0] * len(variables)
                         variables = list(variables.split(","))  # split the variables
                         for i in range(len(variables)):  # remove the array brackets for each variable
-                            variables[i], array_length_variables[i] = remove_brackets(variables[i], array_length_variables[i])
-                        variables = [remap_file_path(variable) for variable in variables]  # remap the dots to / and add the L ; or remap to a primitives character
-                        variables = ["L" + file_name[variable] + ";" if variable in file_name else variable for variable in variables]  # get the obfuscated name of the class
-                        variables = ["/".join(variable.split(".")) if "." in variable else variable for variable in variables]  # if the class is already packaged then change the obfuscated name
+                            variables[i], array_length_variables[i] = remove_brackets(variables[i],
+                                                                                      array_length_variables[i])
+                        variables = [remap_file_path(variable) for variable in
+                                     variables]  # remap the dots to / and add the L ; or remap to a primitives character
+                        variables = ["L" + file_name[variable] + ";" if variable in file_name else variable for variable
+                                     in variables]  # get the obfuscated name of the class
+                        variables = ["/".join(variable.split(".")) if "." in variable else variable for variable in
+                                     variables]  # if the class is already packaged then change the obfuscated name
                         for i in range(len(variables)):  # restore the array brackets upfront for each variable
                             for j in range(array_length_variables[i]):
                                 if variables[i][-1] == ";":
@@ -462,7 +482,8 @@ def make_paths(version, side, removal_bool, force, forceno):
         elif forceno:
             version = version + side + "_" + str(random.getrandbits(128))
         else:
-            aw = input(f"/src/{version}/{side} already exists, wipe it (w), create a new folder (n) or kill the process (k) ? ")
+            aw = input(
+                f"/src/{version}/{side} already exists, wipe it (w), create a new folder (n) or kill the process (k) ? ")
             if aw == "w":
                 shutil.rmtree(Path(f"./src/{version}/{side}"))
             elif aw == "n":
@@ -490,7 +511,8 @@ def delete_dependencies(version, side):
 
     for _dir in [join(path, "com"), path]:
         for f in os.listdir(_dir):
-            if os.path.isdir(join(_dir, f)) and split(f)[-1] not in ['net', 'assets', 'data', 'mojang', 'com', 'META-INF']:
+            if os.path.isdir(join(_dir, f)) and split(f)[-1] not in ['net', 'assets', 'data', 'mojang', 'com',
+                                                                     'META-INF']:
                 shutil.rmtree(join(_dir, f))
 
     with zipfile.ZipFile(f'./src/{version}-{side}-temp.jar', 'w') as z:
@@ -521,19 +543,27 @@ def main():
                         help=f"Choose between fernflower and cfr.")
     parser.add_argument('--nauto', '-na', dest='nauto', action='store_true', default=False,
                         help=f"Choose between auto and manual mode.")
-    parser.add_argument('--download_mapping', '-dm', nargs='?', const=True, type=str2bool, dest='download_mapping', default=True,
-                        required="--nauto" in sys.argv or "-na" in sys.argv, help=f"Download the mappings (only if auto off)")
-    parser.add_argument('--remap_mapping', '-rmap', nargs='?', const=True, type=str2bool, dest='remap_mapping', default=True,
-                        required="--nauto" in sys.argv or "-na" in sys.argv, help=f"Remap the mappings to tsrg (only if auto off)")
-    parser.add_argument('--download_jar', '-dj', nargs='?', const=True, type=str2bool, dest='download_jar', default=True,
-                        required="--nauto" in sys.argv or "-na" in sys.argv, help=f"Download the jar (only if auto off)")
+    parser.add_argument('--download_mapping', '-dm', nargs='?', const=True, type=str2bool, dest='download_mapping',
+                        default=True,
+                        required="--nauto" in sys.argv or "-na" in sys.argv,
+                        help=f"Download the mappings (only if auto off)")
+    parser.add_argument('--remap_mapping', '-rmap', nargs='?', const=True, type=str2bool, dest='remap_mapping',
+                        default=True,
+                        required="--nauto" in sys.argv or "-na" in sys.argv,
+                        help=f"Remap the mappings to tsrg (only if auto off)")
+    parser.add_argument('--download_jar', '-dj', nargs='?', const=True, type=str2bool, dest='download_jar',
+                        default=True,
+                        required="--nauto" in sys.argv or "-na" in sys.argv,
+                        help=f"Download the jar (only if auto off)")
     parser.add_argument('--remap_jar', '-rjar', nargs='?', const=True, type=str2bool, dest='remap_jar', default=True,
                         required="--nauto" in sys.argv or "-na" in sys.argv, help=f"Remap the jar (only if auto off)")
     parser.add_argument('--delete_dep', '-dd', nargs='?', const=True, type=str2bool, dest='delete_dep', default=True,
-                        required="--nauto" in sys.argv or "-na" in sys.argv, help=f"Delete the dependencies (only if auto off)")
+                        required="--nauto" in sys.argv or "-na" in sys.argv,
+                        help=f"Delete the dependencies (only if auto off)")
     parser.add_argument('--decompile', '-dec', nargs='?', const=True, type=str2bool, dest='decompile', default=True,
                         required="--nauto" in sys.argv or "-na" in sys.argv, help=f"Decompile (only if auto off)")
-    parser.add_argument('--quiet', '-q', dest='quiet', action='store_true', default=False, help=f"Doesnt display the messages")
+    parser.add_argument('--quiet', '-q', dest='quiet', action='store_true', default=False,
+                        help=f"Doesnt display the messages")
     use_flags = False
     args = parser.parse_args()
     if args.mcversion:
@@ -552,7 +582,8 @@ def main():
     if use_flags:
         version = args.mcversion
         if version is None:
-            print("Error you should provide a version with --mcversion <version>, use latest or snap if you dont know which one")
+            print(
+                "Error you should provide a version with --mcversion <version>, use latest or snap if you dont know which one")
             sys.exit(-1)
     else:
         version = input(f"Please input a valid version starting from 19w36a (snapshot) and 1.14.4 (releases),\n" +
