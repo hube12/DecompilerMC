@@ -20,7 +20,7 @@ CFR decompilation is approximately 60s and fernflower takes roughly 200s, please
 
 You can run it directly with python 3.7+ with `python3 main.py`
 
-There is a common release here:  https://github.com/hube12/DecompilerMC/releases/tag/0.4 for all version
+There is a common release here:  https://github.com/hube12/DecompilerMC/releases/latest for all version
 
 ----
 
