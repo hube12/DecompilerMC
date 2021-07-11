@@ -196,7 +196,7 @@ def get_version_jar(target_version, side, quiet):
             input("Aborting, press anything to exit")
         sys.exit(-1)
     if not quiet:
-        print("Done !")
+        print("Done!")
 
 
 def get_mappings(version, side, quiet):
@@ -437,7 +437,7 @@ def convert_mappings(version, side, quiet):
                 obf_name = obf_name.split(":")[0]
                 outputFile.write(remap_file_path(obf_name)[1:-1] + " " + remap_file_path(deobf_name)[1:-1] + "\n")
     if not quiet:
-        print("Done !")
+        print("Done!")
 
 
 def make_paths(version, side, removal_bool, force, forceno):
