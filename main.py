@@ -14,6 +14,7 @@ from os.path import join, split
 from pathlib import Path
 from shutil import which
 from subprocess import CalledProcessError
+from typing import Union
 from urllib.error import HTTPError, URLError
 
 assert sys.version_info >= (3, 7)
@@ -100,7 +101,7 @@ def check_java():
             results.append(which('java', path='/opt'))
     results = [path for path in results if path is not None]
     if not results:
-        print('Java JDK is not installed ! Please install java JDK from http://java.oracle.com or OpenJDK')
+        print('Java JDK is not installed ! Please install java JDK from https://java.oracle.com or OpenJDK')
         input("Aborting, press anything to exit")
         sys.exit(1)
 
@@ -150,8 +151,7 @@ def get_latest_version():
 
 
 def get_version_manifest(target_version, quiet):
-    if Path(f"versions/{target_version}/version.json").exists() and Path(
-        f"versions/{target_version}/version.json").is_file():
+    if Path(f"versions/{target_version}/version.json").exists() and Path(f"versions/{target_version}/version.json").is_file():
         if not quiet:
             print(
                 "Version manifest already existing, not downloading again, if you want to please accept safe removal at beginning")
@@ -172,10 +172,18 @@ def get_version_manifest(target_version, quiet):
         sys.exit(-1)
 
 
+def sha256(fname: Union[Union[str, bytes], int]):
+    import hashlib
+    hash_sha256 = hashlib.sha256()
+    with open(fname, "rb") as f:
+        for chunk in iter(lambda: f.read(4096), b""):
+            hash_sha256.update(chunk)
+    return hash_sha256.hexdigest()
+
+
 def get_version_jar(target_version, side, quiet):
     path_to_json = Path(f"versions/{target_version}/version.json")
-    if Path(f"versions/{target_version}/{side}.jar").exists() and Path(
-        f"versions/{target_version}/{side}.jar").is_file():
+    if Path(f"versions/{target_version}/{side}.jar").exists() and Path(f"versions/{target_version}/{side}.jar").is_file():
         if not quiet:
             print(f"versions/{target_version}/{side}.jar already existing, not downloading again")
         return
@@ -184,7 +192,51 @@ def get_version_jar(target_version, side, quiet):
         with open(path_to_json) as f:
             jsn = json.load(f)
             if jsn.get("downloads") and jsn.get("downloads").get(side) and jsn.get("downloads").get(side).get("url"):
-                download_file(jsn.get("downloads").get(side).get("url"), f"versions/{target_version}/{side}.jar", quiet)
+                jar_path = f"versions/{target_version}/{side}.jar"
+                download_file(jsn.get("downloads").get(side).get("url"), jar_path, quiet)
+                # In case the server is newer than 21w39a you need to actually extract it first from the archive
+                if side == SERVER:
+                    if Path(jar_path).exists():
+                        with zipfile.ZipFile(jar_path, mode="r") as z:
+                            content = None
+                            try:
+                                content = z.read("META-INF/versions.list")
+                            except Exception as e:
+                                # we don't have a versions.list in it
+                                pass
+                            if content != None:
+                                element = content.split(b"\t")
+                                if len(element) != 3:
+                                    print(f"Jar should be extracted but version list is not in the correct format, expected 3 fields, got {len(element)} for {content}")
+                                    sys.exit(-1)
+                                version_hash = element[0].decode()
+                                version = element[1].decode()
+                                path = element[2].decode()
+                                if version != target_version and not quiet:
+                                    print(f"Warning, version is not identical to the one targeted got {version} exepected {target_version}")
+                                new_jar_path = f"versions/{target_version}"
+                                try:
+                                    new_jar_path = z.extract(f"META-INF/versions/{path}", new_jar_path)
+                                except Exception as e:
+                                    print(f"Could not extract to {new_jar_path} with error {e}")
+                                    sys.exit(-1)
+                                if Path(new_jar_path).exists():
+                                    file_hash = sha256(new_jar_path)
+                                    if file_hash != version_hash:
+                                        print(f"Extracted file hash and expected hash did not match up, got {file_hash} expected {version_hash}")
+                                        sys.exit(-1)
+                                    try:
+                                        shutil.move(new_jar_path, jar_path)
+                                        shutil.rmtree(f"versions/{target_version}/META-INF")
+                                    except Exception as e:
+                                        print("Exception while removing the temp file", e)
+                                        sys.exit(-1)
+                                else:
+                                    print(f"New {side} jar could not be extracted from archive at {new_jar_path}, failure")
+                                    sys.exit(-1)
+                    else:
+                        print(f"Jar was maybe downloaded but not located, this is a failure, check path at {jar_path}")
+                        sys.exit(-1)
             else:
                 if not quiet:
                     print("Could not download jar, missing fields")
@@ -364,11 +416,13 @@ def remove_brackets(line, counter):
     return line, counter
 
 
-def convert_mappings(version, side, quiet):
+def remap_file_path(path):
     remap_primitives = {"int": "I", "double": "D", "boolean": "Z", "float": "F", "long": "J", "byte": "B", "short": "S",
                         "char": "C", "void": "V"}
-    remap_file_path = lambda path: "L" + "/".join(path.split(".")) + ";" if path not in remap_primitives else \
-    remap_primitives[path]
+    return "L" + "/".join(path.split(".")) + ";" if path not in remap_primitives else remap_primitives[path]
+
+
+def convert_mappings(version, side, quiet):
     with open(f'mappings/{version}/{side}.txt', 'r') as inputFile:
         file_name = {}
         for line in inputFile.readlines():
@@ -673,7 +727,7 @@ def main():
             decompile_fern_flower(decompiled_version, version, side, args.quiet, args.force)
     if not args.quiet:
         print("===FINISHED===")
-        print(f"output is in /src/{version}")
+        print(f"output is in /src/{decompiled_version}")
         input("Press Enter key to exit")
     else:
         sys.exit(0)
