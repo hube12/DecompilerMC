@@ -360,7 +360,7 @@ def decompile_fern_flower(decompiled_version, version, side, quiet, force):
             z.extractall(path=f'./src/{decompiled_version}/{side}')
         t = time.time() - t
         if not quiet:
-            print('Done in %.1fs (file was decompressed in {decompiled_version}/{side})' % t)
+            print(f'Done in %.1fs (file was decompressed in {decompiled_version}/{side})' % t)
             print(f'Remove Extra Jar file? (y/n): ')
             response = input() or "y"
             if response == 'y':
