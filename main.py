@@ -345,7 +345,6 @@ def decompile_fern_flower(decompiled_version, version, side, quiet, force):
                         '-hes=0',  # hide empty super invocation deactivated (might clutter but allow following)
                         '-hdc=0',  # hide empty default constructor deactivated (allow to track)
                         '-dgs=1',  # decompile generic signatures activated (make sure we can follow types)
-                        '-ren=1',  # rename ambiguous activated
                         '-lit=1',  # output numeric literals
                         '-asc=1',  # encode non-ASCII characters in string and character
                         '-log=WARN',
