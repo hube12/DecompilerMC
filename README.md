@@ -20,6 +20,12 @@ CFR decompilation is approximately 60s and fernflower takes roughly 200s, please
 
 You can run it directly with python 3.7+ with `python3 main.py`
 
+You can find the jar and the version manifest in the `./versions/` directory
+
+The code will then be inside the folder called `./src/<name_version(option_hash)>/<side>`
+
+The `./tmp/` directory can be removed without impact
+
 There is a common release here:  https://github.com/hube12/DecompilerMC/releases/latest for all version
 
 ----

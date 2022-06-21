@@ -156,7 +156,7 @@ def get_version_manifest(target_version, quiet):
             print(
                 "Version manifest already existing, not downloading again, if you want to please accept safe removal at beginning")
         return
-    path_to_json = Path(f'versions/version_manifest.json')
+    path_to_json = Path('versions/version_manifest.json')
     if path_to_json.exists() and path_to_json.is_file():
         path_to_json = path_to_json.resolve()
         with open(path_to_json) as f:
@@ -201,10 +201,10 @@ def get_version_jar(target_version, side, quiet):
                             content = None
                             try:
                                 content = z.read("META-INF/versions.list")
-                            except Exception as e:
+                            except Exception as _:
                                 # we don't have a versions.list in it
                                 pass
-                            if content != None:
+                            if content is not None:
                                 element = content.split(b"\t")
                                 if len(element) != 3:
                                     print(f"Jar should be extracted but version list is not in the correct format, expected 3 fields, got {len(element)} for {content}")
@@ -359,8 +359,8 @@ def decompile_fern_flower(decompiled_version, version, side, quiet, force):
             z.extractall(path=f'./src/{decompiled_version}/{side}')
         t = time.time() - t
         if not quiet:
-            print('Done in %.1fs (file was decompressed in {decompiled_version}/{side})' % t)
-            print(f'Remove Extra Jar file? (y/n): ')
+            print(f'Done in %.1fs (file was decompressed in {decompiled_version}/{side})' % t)
+            print('Remove Extra Jar file? (y/n): ')
             response = input() or "y"
             if response == 'y':
                 print(f'- Removing -> {decompiled_version}/{side}/{version}-{side}-temp.jar')
