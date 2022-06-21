@@ -19,7 +19,7 @@ from urllib.error import HTTPError, URLError
 
 assert sys.version_info >= (3, 7)
 
-MANIFEST_LOCATION = "https://launchermeta.mojang.com/mc/game/version_manifest.json"
+MANIFEST_LOCATION = "https://piston-meta.mojang.com/mc/game/version_manifest.json"
 CLIENT = "client"
 SERVER = "server"
 
