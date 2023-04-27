@@ -19,7 +19,7 @@ from urllib.error import HTTPError, URLError
 
 assert sys.version_info >= (3, 7)
 
-MANIFEST_LOCATION = "https://piston-meta.mojang.com/mc/game/version_manifest.json"
+MANIFEST_URL_LIST = ["https://piston-meta.mojang.com/mc/game/version_manifest.json", "https://maven.fabricmc.net/net/minecraft/experimental_versions.json"]
 CLIENT = "client"
 SERVER = "server"
 
@@ -102,17 +102,19 @@ def check_java():
     results = [path for path in results if path is not None]
     if not results:
         print('Java JDK is not installed ! Please install java JDK from https://java.oracle.com or OpenJDK')
-        input("Aborting, press anything to exit")
+        input("Aborting, press Enter key to exit")
         sys.exit(1)
 
 
 def get_global_manifest(quiet):
-    if Path(f"versions/version_manifest.json").exists() and Path(f"versions/version_manifest.json").is_file():
-        if not quiet:
-            print(
-                "Manifest already existing, not downloading again, if you want to please accept safe removal at beginning")
-        return
-    download_file(MANIFEST_LOCATION, f"versions/version_manifest.json", quiet)
+    for manifest in MANIFEST_URL_LIST:
+        manifest_path_str = "versions/{filename}".format(filename=manifest.split('/')[-1])
+        if Path(manifest_path_str).exists() and Path(manifest_path_str).is_file():
+            if not quiet:
+                print(
+                    "Manifest already existing, not downloading again, if you want to please accept safe removal at beginning")
+            return
+        download_file(manifest, manifest_path_str, quiet)
 
 
 def download_file(url, filename, quiet):
@@ -135,7 +137,7 @@ def download_file(url, filename, quiet):
 
 
 def get_latest_version():
-    download_file(MANIFEST_LOCATION, f"manifest.json", True)
+    download_file(MANIFEST_URL_LIST[0], f"manifest.json", True)
     path_to_json = Path(f'manifest.json')
     snapshot = None
     version = None
@@ -156,19 +158,26 @@ def get_version_manifest(target_version, quiet):
             print(
                 "Version manifest already existing, not downloading again, if you want to please accept safe removal at beginning")
         return
-    path_to_json = Path('versions/version_manifest.json')
-    if path_to_json.exists() and path_to_json.is_file():
-        path_to_json = path_to_json.resolve()
-        with open(path_to_json) as f:
-            versions = json.load(f)["versions"]
-            for version in versions:
-                if version.get("id") and version.get("id") == target_version and version.get("url"):
-                    download_file(version.get("url"), f"versions/{target_version}/version.json", quiet)
-                    break
-    else:
+    success = False
+    for manifest in MANIFEST_URL_LIST:
+        path_to_json = Path('versions/{filename}'.format(filename=manifest.split('/')[-1]))
+        if path_to_json.exists() and path_to_json.is_file():
+            path_to_json = path_to_json.resolve()
+            with open(path_to_json) as f:
+                versions = json.load(f)["versions"]
+                for version in versions:
+                    if version.get("id") and version.get("id") == target_version and version.get("url"):
+                        download_file(version.get("url"), f"versions/{target_version}/version.json", quiet)
+                        success = True
+                        break
+                else:
+                    continue # Start the next iteration of manifest if the targeted version is not found in this one
+        else:
+            continue # Start the next iteration of manifest if is not found does not exist
+    if not success:
         if not quiet:
-            print('ERROR: Missing manifest file: version.json')
-            input("Aborting, press anything to exit")
+            print('ERROR: Version not found in any manifest')
+            input("Aborting, press Enter key to exit")
         sys.exit(-1)
 
 
@@ -240,12 +249,12 @@ def get_version_jar(target_version, side, quiet):
             else:
                 if not quiet:
                     print("Could not download jar, missing fields")
-                    input("Aborting, press anything to exit")
+                    input("Aborting, press Enter key to exit")
                 sys.exit(-1)
     else:
         if not quiet:
             print('ERROR: Missing manifest file: version.json')
-            input("Aborting, press anything to exit")
+            input("Aborting, press Enter key to exit")
         sys.exit(-1)
     if not quiet:
         print("Done !")
@@ -287,7 +296,7 @@ def get_mappings(version, side, quiet):
     else:
         if not quiet:
             print('ERROR: Missing manifest file: version.json')
-            input("Aborting, press anything to exit")
+            input("Aborting, press Enter key to exit")
         sys.exit(-1)
 
 
@@ -325,7 +334,7 @@ def remap(version, side, quiet):
         if not quiet:
             print(
                 f'ERROR: Missing files: ./lib/SpecialSource-1.8.6.jar or mappings/{version}/{side}.tsrg or versions/{version}/{side}.jar')
-            input("Aborting, press anything to exit")
+            input("Aborting, press Enter key to exit")
         sys.exit(-1)
 
 
@@ -371,7 +380,7 @@ def decompile_fern_flower(decompiled_version, version, side, quiet, force):
     else:
         if not quiet:
             print(f'ERROR: Missing files: ./lib/fernflower.jar or ./src/{version}-{side}-temp.jar')
-            input("Aborting, press anything to exit")
+            input("Aborting, press Enter key to exit")
         sys.exit(-1)
 
 
@@ -404,7 +413,7 @@ def decompile_cfr(decompiled_version, version, side, quiet):
     else:
         if not quiet:
             print(f'ERROR: Missing files: ./lib/cfr-0.146.jar or ./src/{version}-{side}-temp.jar')
-            input("Aborting, press anything to exit")
+            input("Aborting, press Enter key to exit")
         sys.exit(-1)
 
 
