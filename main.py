@@ -116,23 +116,21 @@ def get_global_manifest(quiet):
     download_file(MANIFEST_LOCATION, f"versions/version_manifest.json", quiet)
 
 
-def download_file(url, filename, quiet):
+def download_file(url, filename, quiet=True):
     try:
         if not quiet:
-            print(f'Downloading {filename}...')
+            print(f'Downloading {url} to {filename}...')
         f = urllib.request.urlopen(url)
+        if Path(filename).exists():
+            filename.unlink()
         with open(filename, 'wb+') as local_file:
             local_file.write(f.read())
-    except HTTPError as e:
-        if not quiet:
-            print('HTTP Error')
-            print(e)
-        sys.exit(-1)
-    except URLError as e:
-        if not quiet:
-            print('URL Error')
-            print(e)
-        sys.exit(-1)
+    except (HTTPError, URLError) as e:
+        if Path(filename).exists():
+            if not quiet:
+                print(f'Failed to download {filename}, using cached version')
+            return
+        raise e
 
 
 def get_latest_version():
