@@ -108,7 +108,7 @@ def get_global_manifest(quiet):
     if Path(f"versions/version_manifest.json").exists() and Path(f"versions/version_manifest.json").is_file():
         if not quiet:
             print(
-                "Manifest already existing, not downloading again, if you want to please accept safe removal at beginning")
+                "Manifest already exists, not downloading again")
         return
     download_file(MANIFEST_LOCATION, f"versions/version_manifest.json", quiet)
 
@@ -122,6 +122,8 @@ def download_file(url, filename, quiet=True):
             filename.unlink()
         with open(filename, 'wb+') as local_file:
             local_file.write(f.read())
+            if not quiet:
+                print(f'Downloaded {filename} successfully!')
     except (HTTPError, URLError) as e:
         if Path(filename).exists():
             if not quiet:
@@ -148,7 +150,7 @@ def get_latest_version():
 def get_version_manifest(target_version, quiet):
     if Path(f"versions/{target_version}/version.json").exists() and Path(f"versions/{target_version}/version.json").is_file():
         if not quiet:
-            print("Version manifest already exists, not downloading again. if you want to please accept safe removal at beginning")
+            print("Version manifest already exists, not downloading again")
         return
     path_to_json = Path('versions/version_manifest.json')
     if not (path_to_json.exists() and path_to_json.is_file()):
@@ -225,8 +227,7 @@ def get_version_jar(target_version, side, quiet):
 def get_mappings(version, side, quiet):
     if Path(f'mappings/{version}/{side}.txt').exists() and Path(f'mappings/{version}/{side}.txt').is_file():
         if not quiet:
-            print(
-                "Mappings already existing, not downloading again, if you want to please accept safe removal at beginning")
+            print("Mappings already exist, not downloading again")
         return
     path_to_json = Path(f'versions/{version}/version.json')
     if path_to_json.exists() and path_to_json.is_file():
@@ -443,7 +444,7 @@ def convert_mappings(version, side, quiet):
                 obf_name = obf_name.split(":")[0]
                 outputFile.write(remap_file_path(obf_name)[1:-1] + " " + remap_file_path(deobf_name)[1:-1] + "\n")
     if not quiet:
-        print("Done !")
+        print("Mappings converted!")
 
 
 def make_paths(version, side, removal_bool, force, forceno):
