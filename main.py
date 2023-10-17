@@ -20,6 +20,7 @@ from urllib.error import HTTPError, URLError
 assert sys.version_info >= (3, 7)
 
 MANIFEST_LOCATION = "https://piston-meta.mojang.com/mc/game/version_manifest_v2.json"
+CFR_VERSION = "0.152"
 CLIENT = "client"
 SERVER = "server"
 
@@ -380,7 +381,7 @@ def decompile_cfr(decompiled_version, version, side, quiet):
         print('=== Decompiling using CFR (silent) ===')
     t = time.time()
     path = Path(f'./src/{version}-{side}-temp.jar')
-    cfr = Path('./lib/cfr-0.146.jar')
+    cfr = Path(f'./lib/cfr-{CFR_VERSION}.jar')
     if path.exists() and cfr.exists():
         path = path.resolve()
         cfr = cfr.resolve()
@@ -403,7 +404,7 @@ def decompile_cfr(decompiled_version, version, side, quiet):
             print('Done in %.1fs' % t)
     else:
         if not quiet:
-            print(f'ERROR: Missing files: ./lib/cfr-0.146.jar or ./src/{version}-{side}-temp.jar')
+            print(f'ERROR: Missing files: ./lib/cfr-{CFR_VERSION}.jar or ./src/{version}-{side}-temp.jar')
             input("Aborting, press anything to exit")
         sys.exit(-1)
 
