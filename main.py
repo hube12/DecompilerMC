@@ -570,111 +570,126 @@ def main():
                         required="--nauto" in sys.argv or "-na" in sys.argv, help=f"Decompile (only if auto off)")
     parser.add_argument('--quiet', '-q', dest='quiet', action='store_true', default=False,
                         help=f"Doesnt display the messages")
+    
     use_flags = False
     args = parser.parse_args()
-    if args.mcversion:
-        use_flags = True
-    if not args.quiet:
-        print("Decompiling using official mojang mappings (Default option are in uppercase, you can just enter)")
-    if use_flags:
-        removal_bool = args.clean
-    else:
-        removal_bool = 1 if input("Do you want to clean up old runs? (y/N): ") in ["y", "yes"] else 0
-    if use_flags:
-        decompiler = args.decompiler
-    else:
-        decompiler = input("Please input you decompiler choice: fernflower or cfr (CFR/f): ")
-    decompiler = decompiler.lower() if decompiler.lower() in ["fernflower", "cfr", "f"] else "cfr"
-    if use_flags:
-        version = args.mcversion
-        if version is None:
-            raise Exception("A version must be defined using --mcversion <version> (such as 'latest' or 'snap')")
-    else:
-        version = input(f"Please input a valid version starting from 19w36a (snapshot) and 1.14.4 (releases),\n" +
-                        f"Use 'snap' for latest snapshot ({snapshot}) or 'latest' for latest version ({latest}) :") or latest
-    if version in ["snap", "s", "snapshot"]:
-        version = snapshot
-    if version in ["latest", "l"]:
-        version = latest
-    if use_flags:
-        side = args.side
-    else:
-        side = input("Please select either client or server side (C/s) : ")
-    side = side.lower() if side.lower() in ["client", "server", "c", "s"] else CLIENT
-    side = CLIENT if side in ["client", "c"] else SERVER
-    decompiled_version = make_paths(version, side, removal_bool, args.force, args.forceno)
-    get_global_manifest(args.quiet)
-    get_version_manifest(version, args.quiet)
-    if use_flags:
-        r = not args.nauto
-    else:
-        r = input("Auto Mode? (Y/n): ") or "y"
-        r = r.lower() == "y"
-    if r:
-        get_mappings(version, side, args.quiet)
-        convert_mappings(version, side, args.quiet)
-        get_version_jar(version, side, args.quiet)
-        remap(version, side, args.quiet)
-        if decompiler.lower() == "cfr":
-            decompile_cfr(decompiled_version, version, side, args.quiet)
-        else:
-            decompile_fern_flower(decompiled_version, version, side, args.quiet, args.force)
+
+    try:
+        if args.mcversion:
+            use_flags = True
         if not args.quiet:
-            print("===FINISHED===")
-            print(f"output is in /src/{version}")
-            input("Press Enter key to exit")
-        sys.exit(0)
-
-    if use_flags:
-        r = args.download_mapping
-    else:
-        r = input('Download mappings? (y/n): ') or "y"
-        r = r.lower() == "y"
-    if r:
-        get_mappings(version, side, args.quiet)
-
-    if use_flags:
-        r = args.remap_mapping
-    else:
-        r = input('Remap mappings to tsrg? (y/n): ') or "y"
-        r = r.lower() == "y"
-    if r:
-        convert_mappings(version, side, args.quiet)
-
-    if use_flags:
-        r = args.download_jar
-    else:
-        r = input(f'Get {version}-{side}.jar ? (y/n): ') or "y"
-        r = r.lower() == "y"
-    if r:
-        get_version_jar(version, side, args.quiet)
-
-    if use_flags:
-        r = args.remap_jar
-    else:
-        r = input('Remap? (y/n): ') or "y"
-        r = r.lower() == "y"
-    if r:
-        remap(version, side, args.quiet)
-
-    if use_flags:
-        r = args.delete_dep
-    else:
-        r = input('Delete Dependencies? (y/n): ') or "y"
-        r = r.lower() == "y"
-    if r:
-        delete_dependencies(version, side)
-
-    if use_flags:
-        r = args.decompile
-    else:
-        r = input('Decompile? (y/n): ') or "y"
-        r = r.lower() == "y"
-    if r:
-        if decompiler.lower() == "cfr":
-            decompile_cfr(decompiled_version, version, side, args.quiet)
+            print("Decompiling using official mojang mappings (Default option are in uppercase, you can just enter)")
+        if use_flags:
+            removal_bool = args.clean
         else:
-            decompile_fern_flower(decompiled_version, version, side, args.quiet, args.force)
+            removal_bool = 1 if input("Do you want to clean up old runs? (y/N): ") in ["y", "yes"] else 0
+        if use_flags:
+            decompiler = args.decompiler
+        else:
+            decompiler = input("Please input you decompiler choice: fernflower or cfr (CFR/f): ")
+        decompiler = decompiler.lower() if decompiler.lower() in ["fernflower", "cfr", "f"] else "cfr"
+        if use_flags:
+            version = args.mcversion
+            if version is None:
+                raise Exception("A version must be defined using --mcversion <version> (such as 'latest' or 'snap')")
+        else:
+            version = input(f"Please input a valid version starting from 19w36a (snapshot) and 1.14.4 (releases),\n" +
+                            f"Use 'snap' for latest snapshot ({snapshot}) or 'latest' for latest version ({latest}): ") or latest
+        if version in ["snap", "s", "snapshot"]:
+            version = snapshot
+        if version in ["latest", "l"]:
+            version = latest
+        if use_flags:
+            side = args.side
+        else:
+            side = input("Please select either client or server side (C/s): ")
+        side = side.lower() if side.lower() in ["client", "server", "c", "s"] else CLIENT
+        side = CLIENT if side in ["client", "c"] else SERVER
+        decompiled_version = make_paths(version, side, removal_bool, args.force, args.forceno)
+        get_global_manifest(args.quiet)
+        get_version_manifest(version, args.quiet)
+        if use_flags:
+            r = not args.nauto
+        else:
+            r = input("Auto Mode? (Y/n): ") or "y"
+            r = r.lower() == "y"
+        if r:
+            get_mappings(version, side, args.quiet)
+            convert_mappings(version, side, args.quiet)
+            get_version_jar(version, side, args.quiet)
+            remap(version, side, args.quiet)
+            if decompiler.lower() == "cfr":
+                decompile_cfr(decompiled_version, version, side, args.quiet)
+            else:
+                decompile_fern_flower(decompiled_version, version, side, args.quiet, args.force)
+            if not args.quiet:
+                print("===FINISHED===")
+                print(f"output is in /src/{version}")
+                input("Press Enter key to exit")
+            sys.exit(0)
+
+        if use_flags:
+            r = args.download_mapping
+        else:
+            r = input('Download mappings? (y/n): ') or "y"
+            r = r.lower() == "y"
+        if r:
+            get_mappings(version, side, args.quiet)
+
+        if use_flags:
+            r = args.remap_mapping
+        else:
+            r = input('Remap mappings to tsrg? (y/n): ') or "y"
+            r = r.lower() == "y"
+        if r:
+            convert_mappings(version, side, args.quiet)
+
+        if use_flags:
+            r = args.download_jar
+        else:
+            r = input(f'Get {version}-{side}.jar ? (y/n): ') or "y"
+            r = r.lower() == "y"
+        if r:
+            get_version_jar(version, side, args.quiet)
+
+        if use_flags:
+            r = args.remap_jar
+        else:
+            r = input('Remap? (y/n): ') or "y"
+            r = r.lower() == "y"
+        if r:
+            remap(version, side, args.quiet)
+
+        if use_flags:
+            r = args.delete_dep
+        else:
+            r = input('Delete Dependencies? (y/n): ') or "y"
+            r = r.lower() == "y"
+        if r:
+            delete_dependencies(version, side)
+
+        if use_flags:
+            r = args.decompile
+        else:
+            r = input('Decompile? (y/n): ') or "y"
+            r = r.lower() == "y"
+        if r:
+            if decompiler == "cfr":
+                decompile_cfr(decompiled_version, version, side, args.quiet)
+            else:
+                decompile_fern_flower(decompiled_version, version, side, args.quiet, args.force)
+    except KeyboardInterrupt:
+        if not args.quiet:
+            print("Keyboard interrupt detected, exiting")
+        sys.exit(-1)
+    except Exception as e:
+        if not args.quiet:
+            print("===Error detected!===")
+            print(e)
+            input("Press Enter key to exit")
+            sys.exit(-1)
+        else:
+            raise e
     if not args.quiet:
         print("===FINISHED===")
         print(f"output is in /src/{decompiled_version}")
