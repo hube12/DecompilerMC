@@ -134,8 +134,8 @@ def download_file(url, filename, quiet=True):
 
 
 def get_latest_version():
-    download_file(MANIFEST_LOCATION, f"manifest.json", True)
-    path_to_json = Path(f'manifest.json')
+    path_to_json = Path('tmp/manifest.json')
+    download_file(MANIFEST_LOCATION, path_to_json, False)
     snapshot = None
     version = None
     if path_to_json.exists() and path_to_json.is_file():
@@ -145,7 +145,6 @@ def get_latest_version():
             if versions and versions.get("release") and versions.get("release"):
                 version = versions.get("release")
                 snapshot = versions.get("snapshot")
-    path_to_json.unlink()
     return snapshot, version
 
 
