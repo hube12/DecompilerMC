@@ -133,8 +133,8 @@ def download_file(url, filename, quiet=True):
 
 
 def get_latest_version():
-    path_to_json = Path('tmp/manifest.json')
-    download_file(MANIFEST_LOCATION, path_to_json, False)
+    path_to_json = (Path(__file__) / '../tmp/manifest.json').resolve()
+    download_file(MANIFEST_LOCATION, path_to_json, True)
     snapshot = None
     version = None
     if path_to_json.exists() and path_to_json.is_file():
