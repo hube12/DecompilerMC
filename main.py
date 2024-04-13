@@ -20,6 +20,7 @@ from urllib.error import HTTPError, URLError
 assert sys.version_info >= (3, 7)
 
 CFR_VERSION = "0.152"
+SPECIAL_SOURCE_VERSION = "1.11.4"
 MANIFEST_LOCATION = "https://piston-meta.mojang.com/mc/game/version_manifest_v2.json"
 CLIENT = "client"
 SERVER = "server"
@@ -306,7 +307,7 @@ def remap(version, side, quiet):
                 sys.exit(-1)
             path = path_temp
     mapp = Path(f'mappings/{version}/{side}.tsrg')
-    specialsource = Path('./lib/SpecialSource-1.9.1.jar')
+    specialsource = Path(f'./lib/SpecialSource-{SPECIAL_SOURCE_VERSION}.jar')
     if path.exists() and mapp.exists() and specialsource.exists() and path.is_file() and mapp.is_file() and specialsource.is_file():
         path = path.resolve()
         mapp = mapp.resolve()
@@ -325,7 +326,7 @@ def remap(version, side, quiet):
     else:
         if not quiet:
             print(
-                f'ERROR: Missing files: ./lib/SpecialSource-1.8.6.jar or mappings/{version}/{side}.tsrg or versions/{version}/{side}.jar')
+                f'ERROR: Missing files: ./lib/SpecialSource-{SPECIAL_SOURCE_VERSION}.jar or mappings/{version}/{side}.tsrg or versions/{version}/{side}.jar')
             input("Aborting, press anything to exit")
         sys.exit(-1)
 
