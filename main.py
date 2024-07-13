@@ -282,10 +282,10 @@ def remap(version, side, quiet):
     mapp = mapp.resolve()
     specialsource = specialsource.resolve()
     subprocess.run(['java',
-                    '-jar', specialsource.__str__(),
-                    '--in-jar', path.__str__(),
+                    '-jar', str(specialsource),
+                    '--in-jar', str(path),
                     '--out-jar', f'./src/{version}-{side}-temp.jar',
-                    '--srg-in', mapp.__str__(),
+                    '--srg-in', str(mapp),
                     "--kill-lvt"  # kill snowmen
                     ], check=True, capture_output=quiet)
     if not quiet:
@@ -308,14 +308,14 @@ def decompile_fern_flower(decompiled_version, version, side, quiet, force):
     subprocess.run(['java',
                     '-Xmx4G',
                     '-Xms1G',
-                    '-jar', fernflower.__str__(),
+                    '-jar', str(fernflower),
                     '-hes=0',  # hide empty super invocation deactivated (might clutter but allow following)
                     '-hdc=0',  # hide empty default constructor deactivated (allow to track)
                     '-dgs=1',  # decompile generic signatures activated (make sure we can follow types)
                     '-lit=1',  # output numeric literals
                     '-asc=1',  # encode non-ASCII characters in string and character
                     '-log=WARN',
-                    path.__str__(), f'./src/{decompiled_version}/{side}'
+                    str(path), f'./src/{decompiled_version}/{side}'
                     ], check=True, capture_output=quiet)
     if not quiet:
         print(f'- Removing -> {version}-{side}-temp.jar')
@@ -350,8 +350,8 @@ def decompile_cfr(decompiled_version, version, side, quiet):
     subprocess.run(['java',
                     '-Xmx4G',
                     '-Xms1G',
-                    '-jar', cfr.__str__(),
-                    path.__str__(),
+                    '-jar', str(cfr),
+                    str(path),
                     '--outputdir', f'./src/{decompiled_version}/{side}',
                     '--caseinsensitivefs', 'true',
                     "--silent", "true"
