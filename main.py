@@ -135,7 +135,7 @@ def download_file(url, filename, quiet=True):
 
 
 def get_latest_version():
-    path_to_json = Path('./tmp/manifest.json')
+    path_to_json = Path(__file__).parent / 'tmp/manifest.json'
     download_file(MANIFEST_LOCATION, path_to_json, True)
     snapshot = None
     version = None
