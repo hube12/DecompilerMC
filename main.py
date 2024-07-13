@@ -106,12 +106,12 @@ def check_java():
 
 
 def get_global_manifest(quiet):
-    if Path(f"versions/version_manifest.json").exists() and Path(f"versions/version_manifest.json").is_file():
+    version_manifest = Path(f"versions/version_manifest.json")
+    if version_manifest.exists() and version_manifest.is_file():
         if not quiet:
-            print(
-                "Manifest already exists, not downloading again")
+            print("Manifest already exists, not downloading again")
         return
-    download_file(MANIFEST_LOCATION, f"versions/version_manifest.json", quiet)
+    download_file(MANIFEST_LOCATION, version_manifest, quiet)
 
 
 def download_file(url, filename, quiet=True):
@@ -119,7 +119,7 @@ def download_file(url, filename, quiet=True):
         if not quiet:
             print(f'Downloading {url} to {filename}...')
         f = urllib.request.urlopen(url)
-        if Path(filename).exists():
+        if filename.exists():
             filename.unlink()
         with open(filename, 'wb+') as local_file:
             local_file.write(f.read())
@@ -134,7 +134,7 @@ def download_file(url, filename, quiet=True):
 
 
 def get_latest_version():
-    path_to_json = (Path(__file__) / '../tmp/manifest.json').resolve()
+    path_to_json = Path('./tmp/manifest.json')
     download_file(MANIFEST_LOCATION, path_to_json, True)
     snapshot = None
     version = None
@@ -149,20 +149,21 @@ def get_latest_version():
 
 
 def get_version_manifest(target_version, quiet):
-    if Path(f"versions/{target_version}/version.json").exists() and Path(f"versions/{target_version}/version.json").is_file():
+    version_json = Path(f"versions/{target_version}/version.json")
+    if version_json.exists() and version_json.is_file():
         if not quiet:
             print("Version manifest already exists, not downloading again")
         return
-    path_to_json = Path('versions/version_manifest.json')
-    if not (path_to_json.exists() and path_to_json.is_file()):
+    version_manifest = Path('versions/version_manifest.json')
+    if not (version_manifest.exists() and version_manifest.is_file()):
         raise Exception('Missing manifest file: version.json')
     
-    path_to_json = path_to_json.resolve()
-    with open(path_to_json) as f:
+    version_manifest = version_manifest.resolve()
+    with open(version_manifest) as f:
         versions = json.load(f)["versions"]
         for version in versions:
             if version.get("id") and version.get("id") == target_version and version.get("url"):
-                download_file(version.get("url"), f"versions/{target_version}/version.json", quiet)
+                download_file(version.get("url"), version_json, quiet)
                 break
 
 
@@ -176,20 +177,20 @@ def sha256(fname: Union[Union[str, bytes], int]):
 
 
 def get_version_jar(target_version, side, quiet):
-    path_to_json = Path(f"versions/{target_version}/version.json")
-    if Path(f"versions/{target_version}/{side}.jar").exists() and Path(f"versions/{target_version}/{side}.jar").is_file():
+    version_json = Path(f"versions/{target_version}/version.json")
+    jar_path = Path(f"versions/{target_version}/{side}.jar")
+    if jar_path.exists() and jar_path.is_file():
         if not quiet:
-            print(f"versions/{target_version}/{side}.jar already existing, not downloading again")
+            print(f"{jar_path} already exists, not downloading again")
         return
-    if not (path_to_json.exists() and path_to_json.is_file()):
+    if not (version_json.exists() and version_json.is_file()):
         raise Exception('ERROR: Missing manifest file: version.json')
 
-    with open(path_to_json) as f:
+    with open(version_json) as f:
         jsn = json.load(f)
         if not (jsn.get("downloads") and jsn.get("downloads").get(side) and jsn.get("downloads").get(side).get("url")):
             raise Exception("Could not download jar, missing fields")
 
-        jar_path = f"versions/{target_version}/{side}.jar"
         download_file(jsn.get("downloads").get(side).get("url"), jar_path, quiet)
         # In case the server is newer than 21w39a you need to actually extract it first from the archive
         if side == SERVER:
@@ -226,15 +227,16 @@ def get_version_jar(target_version, side, quiet):
 
 
 def get_mappings(version, side, quiet):
-    if Path(f'mappings/{version}/{side}.txt').exists() and Path(f'mappings/{version}/{side}.txt').is_file():
+    mappings_file = Path(f'mappings/{version}/{side}.txt')
+    if mappings_file.exists() and mappings_file.is_file():
         if not quiet:
             print("Mappings already exist, not downloading again")
         return
-    path_to_json = Path(f'versions/{version}/version.json')
-    if path_to_json.exists() and path_to_json.is_file():
+    version_json = Path(f'versions/{version}/version.json')
+    if version_json.exists() and version_json.is_file():
         if not quiet:
             print(f'Found {version}.json')
-        with open(path_to_json) as f:
+        with open(version_json) as f:
             jfile = json.load(f)
             url = jfile['downloads']
             if side == CLIENT:  # client:
@@ -253,7 +255,7 @@ def get_mappings(version, side, quiet):
                 raise Exception('ERROR, type not recognized')
             if not quiet:
                 print(f'Downloading the mappings for {version}...')
-            download_file(url, f'mappings/{version}/{"client" if side == CLIENT else "server"}.txt', quiet)
+            download_file(url, mappings_file, quiet)
     else:
         raise Exception('ERROR: Missing manifest file: version.json')
 
