@@ -121,6 +121,7 @@ def download_file(url, filename, quiet=True):
         f = urllib.request.urlopen(url)
         if filename.exists():
             filename.unlink()
+        filename.parent.mkdir(parents=True, exist_ok=True)
         with open(filename, 'wb+') as local_file:
             local_file.write(f.read())
             if not quiet:
