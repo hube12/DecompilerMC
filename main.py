@@ -8,6 +8,7 @@ import shutil
 import subprocess
 import sys
 import time
+import traceback
 import urllib.request
 import zipfile
 from os.path import join, split
@@ -592,7 +593,7 @@ def main():
     except Exception as e:
         if not args.quiet:
             print("===Error detected!===")
-            print(e)
+            traceback.print_exc()
             input("Press Enter key to exit")
             sys.exit(-1)
         else:
