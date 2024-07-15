@@ -462,7 +462,7 @@ def convert_mappings(version, side, quiet):
         print("Mappings converted!")
 
 
-def make_paths(version, side, clean, force, forceno):
+def make_paths(version, side, clean, force):
     path = Path(f'mappings/{version}')
     if not path.exists():
         path.mkdir(parents=True)
@@ -501,17 +501,10 @@ def make_paths(version, side, clean, force, forceno):
     else:
         if force:
             shutil.rmtree(Path(f"./src/{version}/{side}"))
-        elif forceno:
-            version = version + side + "_" + str(random.getrandbits(128))
         else:
-            aw = input(
-                f"/src/{version}/{side} already exists, wipe it (w), create a new folder (n) or kill the process (k) ? ")
-            if aw == "w":
-                shutil.rmtree(Path(f"./src/{version}/{side}"))
-            elif aw == "n":
-                version = version + side + "_" + str(random.getrandbits(128))
-            else:
-                raise KeyboardInterrupt
+            if not quiet:
+                print(f"{path} exists, creating new directory")
+            version = version + side + "_" + str(random.getrandbits(128))
         path = Path(f'src/{version}/{side}')
         path.mkdir(parents=True)
 
@@ -525,8 +518,8 @@ def make_paths(version, side, clean, force, forceno):
     return version
 
 
-def run(version, side, decompiler="cfr", quiet=True, clean=False, force=False, forceno=True):
-    decompiled_version = make_paths(version, side, clean, force, forceno)
+def run(version, side, decompiler="cfr", quiet=True, clean=False, force=False):
+    decompiled_version = make_paths(version, side, clean, force)
     get_global_manifest(quiet)
     get_version_manifest(version, quiet)
 
@@ -558,8 +551,6 @@ def main():
                         help=f"Clean old runs")
     parser.add_argument('--force', '-f', dest='force', action='store_true', default=False,
                         help=f"Force resolving conflict by replacing old files.")
-    parser.add_argument('--forceno', '-fn', dest='forceno', action='store_false', default=True,
-                        help=f"Force resolving conflict by creating new directories.")
     parser.add_argument('--decompiler', '-d', type=str, dest='decompiler', default="cfr",
                         help=f"Choose between fernflower and cfr.")
     parser.add_argument('--quiet', '-q', dest='quiet', action='store_true', default=False,
@@ -572,6 +563,8 @@ def main():
             # Enable interactive mode
 
             args.clean = input("Do you want to clean up old runs? (y/N): ") in ["y", "yes"]
+            if not args.clean:
+                args.force = input("Do you want to force replacing old files on conflict? (y/N): ") in ["y", "yes"]
 
             version = input(f"Please input a valid version starting from 19w36a (snapshot) and 1.14.4 (releases),\n" +
                             f"Use 'snap' for latest snapshot ({snapshot}) or 'latest' for latest version ({latest}): ") or latest
@@ -584,7 +577,7 @@ def main():
             args.side = SERVER if input("Please select either client or server side (C/s): ").lower() in ["server", "s"] else CLIENT
             args.decompiler = "fernflower" if input("Please input your decompiler of choice: cfr or fernflower (CFR/f): ").lower() in ["fernflower", "f"] else "cfr"
 
-        decompiled_version = run(args.mcversion, args.side, args.decompiler, args.quiet, args.clean, args.force, args.forceno)
+        decompiled_version = run(args.mcversion, args.side, args.decompiler, args.quiet, args.clean, args.force)
 
     except KeyboardInterrupt:
         if not args.quiet:

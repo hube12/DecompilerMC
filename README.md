@@ -45,8 +45,8 @@ Examples:
 
 ```bash
 
-usage: main.py [-h] [--mcversion MCVERSION] [--side SIDE] [--clean] [--force]
-               [--forceno] [--decompiler DECOMPILER] [--quiet]
+usage: main.py [-h] [--mcversion MCVERSION] [--interactive INTERACTIVE] [--side SIDE] [--clean] [--force] [--decompiler DECOMPILER]
+               [--quiet]
 
 Decompile Minecraft source code
 
@@ -61,7 +61,6 @@ optional arguments:
                         server)
   --clean, -c           Clean old runs
   --force, -f           Force resolving conflict by replacing old files.
-  --forceno, -fn        Force resolving conflict by creating new directories.
   --decompiler DECOMPILER, -d DECOMPILER
                         Choose between fernflower and cfr.
   --quiet, -q           Doesn't display the messages
