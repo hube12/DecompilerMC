@@ -524,9 +524,6 @@ def make_paths(version, side, clean, force, forceno):
 
 
 def run(version, side, decompiler="cfr", quiet=True, clean=False, force=False, forceno=True):
-    if not quiet:
-        print("Decompiling using official Mojang mappings...")
-
     decompiled_version = make_paths(version, side, clean, force, forceno)
     get_global_manifest(quiet)
     get_version_manifest(version, quiet)
@@ -566,7 +563,6 @@ def main():
     parser.add_argument('--quiet', '-q', dest='quiet', action='store_true', default=False,
                         help=f"Doesnt display the messages")
     
-    use_flags = False
     args = parser.parse_args()
 
     try:
@@ -586,7 +582,7 @@ def main():
             args.side = SERVER if input("Please select either client or server side (C/s): ").lower() in ["server", "s"] else CLIENT
             args.decompiler = "fernflower" if input("Please input your decompiler of choice: cfr or fernflower (CFR/f): ").lower() in ["fernflower", "f"] else "cfr"
 
-        decompiled_version = run(args.mcversion, args.side, args.decompiler, args.quiet, args.clean, args.force, args.forceno, steps)
+        decompiled_version = run(args.mcversion, args.side, args.decompiler, args.quiet, args.clean, args.force, args.forceno)
 
     except KeyboardInterrupt:
         if not args.quiet:
