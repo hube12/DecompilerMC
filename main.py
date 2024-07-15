@@ -54,57 +54,58 @@ def str2bool(v):
 
 
 def check_java():
-    """Check for java and setup the proper directory if needed"""
-    results = []
+    """Check for a Java installation"""
     if sys.platform.startswith('win'):
-        if not results:
-            import winreg
+        # Check Windows registry
+        import winreg
 
-            for flag in [winreg.KEY_WOW64_64KEY, winreg.KEY_WOW64_32KEY]:
-                try:
-                    k = winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE, r'Software\JavaSoft\Java Development Kit', 0,
-                                       winreg.KEY_READ | flag)
-                    version, _ = winreg.QueryValueEx(k, 'CurrentVersion')
-                    k.Close()
-                    k = winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE,
-                                       r'Software\JavaSoft\Java Development Kit\%s' % version, 0,
-                                       winreg.KEY_READ | flag)
-                    path, _ = winreg.QueryValueEx(k, 'JavaHome')
-                    k.Close()
-                    path = join(str(path), 'bin')
-                    subprocess.run(['"%s"' % join(path, 'java'), ' -version'], stdout=open(os.devnull, 'w'),
-                                   stderr=subprocess.STDOUT, check=True)
-                    results.append(path)
-                except (CalledProcessError, OSError):
-                    pass
-        if not results:
+        for flag in [winreg.KEY_WOW64_64KEY, winreg.KEY_WOW64_32KEY]:
             try:
-                subprocess.run(['java', '-version'], stdout=open(os.devnull, 'w'), stderr=subprocess.STDOUT, check=True)
-                results.append('')
+                k = winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE, r'Software\JavaSoft\Java Development Kit', 0,
+                                   winreg.KEY_READ | flag)
+                version, _ = winreg.QueryValueEx(k, 'CurrentVersion')
+                k.Close()
+                k = winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE,
+                                   r'Software\JavaSoft\Java Development Kit\%s' % version, 0,
+                                   winreg.KEY_READ | flag)
+                path, _ = winreg.QueryValueEx(k, 'JavaHome')
+                k.Close()
+                path = join(str(path), 'bin')
+                subprocess.run(['"%s"' % join(path, 'java'), ' -version'], stdout=open(os.devnull, 'w'),
+                               stderr=subprocess.STDOUT, check=True)
+                return True
             except (CalledProcessError, OSError):
                 pass
-        if not results and 'ProgramW6432' in os.environ:
-            results.append(which('java.exe', path=os.environ['ProgramW6432']))
-        if not results and 'ProgramFiles' in os.environ:
-            results.append(which('java.exe', path=os.environ['ProgramFiles']))
-        if not results and 'ProgramFiles(x86)' in os.environ:
-            results.append(which('java.exe', path=os.environ['ProgramFiles(x86)']))
+
+        # Check for global installation
+        try:
+            subprocess.run(['java', '-version'], stdout=open(os.devnull, 'w'), stderr=subprocess.STDOUT, check=True)
+            return True
+        except (CalledProcessError, OSError):
+            pass
+
+        # Check in known installation paths
+        if which('java.exe', path=os.environ['ProgramW6432']) or \
+            which('java.exe', path=os.environ['ProgramFiles']) or \
+            which('java.exe', path=os.environ['ProgramFiles(x86)']):
+            return True
+
     elif sys.platform.startswith('linux') or sys.platform.startswith('darwin'):
-        if not results:
-            try:
-                subprocess.run(['java', '-version'], stdout=open(os.devnull, 'w'), stderr=subprocess.STDOUT, check=True)
-                results.append('')
-            except (CalledProcessError, OSError):
-                pass
-        if not results:
-            results.append(which('java', path='/usr/bin'))
-        if not results:
-            results.append(which('java', path='/usr/local/bin'))
-        if not results:
-            results.append(which('java', path='/opt'))
-    results = [path for path in results if path is not None]
-    if not results:
-        raise Exception('Java JDK is not installed! Please install java JDK from https://java.oracle.com or OpenJDK.')
+        # Check for global installation
+        try:
+            subprocess.run(['java', '-version'], stdout=open(os.devnull, 'w'), stderr=subprocess.STDOUT, check=True)
+            return True
+        except (CalledProcessError, OSError):
+            pass
+
+        # Check in known installation paths
+        if which('java', path='/usr/bin') or which('java', path='/usr/local/bin') or which('java', path='/opt'):
+            return True
+
+    else:
+        raise Exception(f"Unknown platform: {sys.platform}")
+    
+    raise Exception('Java JDK is not installed! Please install java JDK from https://java.oracle.com or OpenJDK.')
 
 
 def get_global_manifest(quiet):
