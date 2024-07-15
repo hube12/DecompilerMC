@@ -540,21 +540,21 @@ def main():
         raise Exception("Error getting latest versions, please refresh cache")
     # for arguments
     parser = argparse.ArgumentParser(description='Decompile Minecraft source code')
-    parser.add_argument('--mcversion', '-mcv', type=str, dest='mcversion', default=latest,
+    parser.add_argument('--mcversion', '-v', type=str, dest='mcversion', default=latest,
                         help=f"The version you want to decompile (alid version starting from 19w36a (snapshot) and 1.14.4 (releases))\n"
                              f"Use 'snap' for latest snapshot ({snapshot}) or 'latest' for latest version ({latest})")
     parser.add_argument('--interactive', '-i', type=str2bool, default=False,
                         help="Enable an interactive CLI to specify options (all other command line arguments, besides --quiet, will be ignored)")
-    parser.add_argument('--side', '-s', type=str, dest='side', default="client",
-                        help='The side you want to decompile (either client or server)')
+    parser.add_argument('--side', '-s', type=str, dest='side', default="client", choices=["client", "server"],
+                        help='Whether to decompile the client side or server side')
     parser.add_argument('--clean', '-c', dest='clean', action='store_true', default=False,
                         help=f"Clean old runs")
     parser.add_argument('--force', '-f', dest='force', action='store_true', default=False,
-                        help=f"Force resolving conflict by replacing old files.")
-    parser.add_argument('--decompiler', '-d', type=str, dest='decompiler', default="cfr",
-                        help=f"Choose between fernflower and cfr.")
+                        help=f"Force resolving conflicts by replacing old files")
+    parser.add_argument('--decompiler', '-d', type=str, dest='decompiler', default="cfr", choices=DECOMPILERS.keys(),
+                        help=f"Select a copmiler to run")
     parser.add_argument('--quiet', '-q', dest='quiet', action='store_true', default=False,
-                        help=f"Doesnt display the messages")
+                        help=f"Suppresses logging output")
     
     args = parser.parse_args()
 

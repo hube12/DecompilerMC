@@ -40,30 +40,29 @@ if you actually need a specific path.
 Examples:
 - Decompile latest release without any output: `python3 main.py --mcv latest -q` 
 - Decompile latest snapshot server side with output: `python3 main.py --mcversion snap --side server` 
-- Decompile 1.14.4 client side with output cleaning any old runs:  `python3 main.py -mcv 1.14.4 -s client -f -q -c` 
+- Decompile 1.14.4 client side with output cleaning any old runs:  `python3 main.py -v 1.14.4 -s client -f -q -c` 
 
 
 ```bash
-
-usage: main.py [-h] [--mcversion MCVERSION] [--interactive INTERACTIVE] [--side SIDE] [--clean] [--force] [--decompiler DECOMPILER]
-               [--quiet]
+usage: main.py [-h] [--mcversion MCVERSION] [--interactive INTERACTIVE] [--side {client,server}] [--clean] [--force]
+               [--decompiler {fernflower,cfr}] [--quiet]
 
 Decompile Minecraft source code
 
-optional arguments:
+options:
   -h, --help            show this help message and exit
-  --mcversion MCVERSION, -mcv MCVERSION
-                        The version you want to decompile (all versions
-                        starting from 19w36a (snapshot) and 1.14.4 (releases))
-                        Use 'snap' for latest snapshot (20w48a for example, it will get it automatically) or 'latest'
-                        for latest version (1.16.4 for example, it will get it automatically)
-  --side SIDE, -s SIDE  The side you want to decompile (either client or
-                        server)
+  --mcversion MCVERSION, -v MCVERSION
+                        The version you want to decompile (alid version starting from 19w36a (snapshot) and 1.14.4 (releases)) Use 'snap' for
+                        latest snapshot (1.21) or 'latest' for latest version (1.21)
+  --interactive INTERACTIVE, -i INTERACTIVE
+                        Enable an interactive CLI to specify options (all other command line arguments, besides --quiet, will be ignored)
+  --side {client,server}, -s {client,server}
+                        Whether to decompile the client side or server side
   --clean, -c           Clean old runs
-  --force, -f           Force resolving conflict by replacing old files.
-  --decompiler DECOMPILER, -d DECOMPILER
-                        Choose between fernflower and cfr.
-  --quiet, -q           Doesn't display the messages
+  --force, -f           Force resolving conflicts by replacing old files
+  --decompiler {fernflower,cfr}, -d {fernflower,cfr}
+                        Select a copmiler to run
+  --quiet, -q           Suppresses logging output
 ```
 
 ----
