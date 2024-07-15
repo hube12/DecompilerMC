@@ -523,7 +523,7 @@ def make_paths(version, side, removal_bool, force, forceno):
     return version
 
 
-def run(version, side, decompiler="cfr", quiet=True, clean=False, force=False, forceno=True, steps=False):
+def run(version, side, decompiler="cfr", quiet=True, clean=False, force=False, forceno=True):
     if not quiet:
         print("Decompiling using official Mojang mappings...")
 
@@ -531,16 +531,12 @@ def run(version, side, decompiler="cfr", quiet=True, clean=False, force=False, f
     get_global_manifest(quiet)
     get_version_manifest(version, quiet)
 
-    if not steps or steps.get('download_mapping'):
-        get_mappings(version, side, quiet)
-    if not steps or steps.get('remap_mapping'):
-        convert_mappings(version, side, quiet)
-    if not steps or steps.get('download_jar'):
-        get_version_jar(version, side, quiet)
-    if not steps or steps.get('remap_jar'):
-        remap(version, side, quiet)
-    if not steps or steps.get('decompile'):
-        decompile(decompiler, decompiled_version, version, side, quiet, force)
+    get_mappings(version, side, quiet)
+    convert_mappings(version, side, quiet)
+    get_version_jar(version, side, quiet)
+    remap(version, side, quiet)
+    
+    decompile(decompiler, decompiled_version, version, side, quiet, force)
 
     return decompiled_version
 
@@ -567,24 +563,6 @@ def main():
                         help=f"Force resolving conflict by creating new directories.")
     parser.add_argument('--decompiler', '-d', type=str, dest='decompiler', default="cfr",
                         help=f"Choose between fernflower and cfr.")
-    parser.add_argument('--nauto', '-na', dest='nauto', action='store_true', default=False,
-                        help=f"Choose between auto and manual mode.")
-    parser.add_argument('--download_mapping', '-dm', nargs='?', const=True, type=str2bool, dest='download_mapping',
-                        default=True,
-                        required="--nauto" in sys.argv or "-na" in sys.argv,
-                        help=f"Download the mappings (only if auto off)")
-    parser.add_argument('--remap_mapping', '-rmap', nargs='?', const=True, type=str2bool, dest='remap_mapping',
-                        default=True,
-                        required="--nauto" in sys.argv or "-na" in sys.argv,
-                        help=f"Remap the mappings to tsrg (only if auto off)")
-    parser.add_argument('--download_jar', '-dj', nargs='?', const=True, type=str2bool, dest='download_jar',
-                        default=True,
-                        required="--nauto" in sys.argv or "-na" in sys.argv,
-                        help=f"Download the jar (only if auto off)")
-    parser.add_argument('--remap_jar', '-rjar', nargs='?', const=True, type=str2bool, dest='remap_jar', default=True,
-                        required="--nauto" in sys.argv or "-na" in sys.argv, help=f"Remap the jar (only if auto off)")
-    parser.add_argument('--decompile', '-dec', nargs='?', const=True, type=str2bool, dest='decompile', default=True,
-                        required="--nauto" in sys.argv or "-na" in sys.argv, help=f"Decompile (only if auto off)")
     parser.add_argument('--quiet', '-q', dest='quiet', action='store_true', default=False,
                         help=f"Doesnt display the messages")
     
@@ -607,24 +585,6 @@ def main():
 
             args.side = SERVER if input("Please select either client or server side (C/s): ").lower() in ["server", "s"] else CLIENT
             args.decompiler = "fernflower" if input("Please input your decompiler of choice: cfr or fernflower (CFR/f): ").lower() in ["fernflower", "f"] else "cfr"
-            args.nauto = not str2bool(input("Auto Mode? (Y/n): "))
-
-            if args.nauto:
-                args.download_mapping = str2bool(input('Download mappings? (Y/n): ') or True)
-                args.remap_mapping = str2bool(input('Remap mappings to tsrg? (Y/n): ') or True)
-                args.download_jar = str2bool(input(f'Get {version}-{side}.jar? (Y/n): ') or True)
-                args.remap_jar = str2bool(input('Remap? (Y/n): ') or True)
-                args.decompile = str2bool(input('Decompile? (Y/n): ') or True)
-        
-        steps = False 
-        if args.nauto:
-            steps = {
-                'download_mapping': args.download_mapping,
-                'remap_mapping': args.remap_mapping,
-                'download_jar': args.download_jar,
-                'remap_jar': args.remap_jar,
-                'decompile': args.decompile,
-            }
 
         decompiled_version = run(args.mcversion, args.side, args.decompiler, args.quiet, args.clean, args.force, args.forceno, steps)
 

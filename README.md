@@ -40,17 +40,13 @@ if you actually need a specific path.
 Examples:
 - Decompile latest release without any output: `python3 main.py --mcv latest -q` 
 - Decompile latest snapshot server side with output: `python3 main.py --mcversion snap --side server` 
-- Decompile 1.14.4 client side with output and not automatic with forcing delete of old runs:  `python3 main.py -mcv 1.14.4 -s client -na -f -rmap -rjar -dm -dj -dd -dec -q -c` 
+- Decompile 1.14.4 client side with output cleaning any old runs:  `python3 main.py -mcv 1.14.4 -s client -f -q -c` 
 
 
 ```bash
 
 usage: main.py [-h] [--mcversion MCVERSION] [--side SIDE] [--clean] [--force]
-               [--forceno] [--decompiler DECOMPILER] [--nauto]
-               [--download_mapping DOWNLOAD_MAPPING]
-               [--remap_mapping [REMAP_MAPPING]]
-               [--download_jar [DOWNLOAD_JAR]] [--remap_jar [REMAP_JAR]]
-               [--delete_dep [DELETE_DEP]] [--decompile [DECOMPILE]] [--quiet]
+               [--forceno] [--decompiler DECOMPILER] [--quiet]
 
 Decompile Minecraft source code
 
@@ -68,19 +64,6 @@ optional arguments:
   --forceno, -fn        Force resolving conflict by creating new directories.
   --decompiler DECOMPILER, -d DECOMPILER
                         Choose between fernflower and cfr.
-  --nauto, -na          Choose between auto and manual mode.
-  --download_mapping DOWNLOAD_MAPPING, -dm DOWNLOAD_MAPPING
-                        Download the mappings (only if auto off)
-  --remap_mapping [REMAP_MAPPING], -rmap [REMAP_MAPPING]
-                        Remap the mappings to tsrg (only if auto off)
-  --download_jar [DOWNLOAD_JAR], -dj [DOWNLOAD_JAR]
-                        Download the jar (only if auto off)
-  --remap_jar [REMAP_JAR], -rjar [REMAP_JAR]
-                        Remap the jar (only if auto off)
-  --delete_dep [DELETE_DEP], -dd [DELETE_DEP]
-                        Delete the dependencies (only if auto off)
-  --decompile [DECOMPILE], -dec [DECOMPILE]
-                        Decompile (only if auto off)
   --quiet, -q           Doesn't display the messages
 ```
 
