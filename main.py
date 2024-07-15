@@ -523,23 +523,6 @@ def make_paths(version, side, removal_bool, force, forceno):
     return version
 
 
-def delete_dependencies(version, side):
-    path = f'./tmp/{version}/{side}'
-
-    with zipfile.ZipFile(f'./src/{version}-{side}-temp.jar') as z:
-        z.extractall(path=path)
-
-    for _dir in [join(path, "com"), path]:
-        for f in os.listdir(_dir):
-            if os.path.isdir(join(_dir, f)) and split(f)[-1] not in ['net', 'assets', 'data', 'mojang', 'com',
-                                                                     'META-INF']:
-                shutil.rmtree(join(_dir, f))
-
-    with zipfile.ZipFile(f'./src/{version}-{side}-temp.jar', 'w') as z:
-        for f in glob.iglob(f'{path}/**', recursive=True):
-            z.write(f, arcname=f[len(path) + 1:])
-
-
 def run(version, side, decompiler="cfr", quiet=True, clean=False, force=False, forceno=True, steps=False):
     if not quiet:
         print("Decompiling using official Mojang mappings...")
@@ -556,8 +539,6 @@ def run(version, side, decompiler="cfr", quiet=True, clean=False, force=False, f
         get_version_jar(version, side, quiet)
     if not steps or steps.get('remap_jar'):
         remap(version, side, quiet)
-    if steps and steps.get('delete_dep'):
-        delete_dependencies(version, side, quiet)
     if not steps or steps.get('decompile'):
         decompile(decompiler, decompiled_version, version, side, quiet, force)
 
@@ -602,9 +583,6 @@ def main():
                         help=f"Download the jar (only if auto off)")
     parser.add_argument('--remap_jar', '-rjar', nargs='?', const=True, type=str2bool, dest='remap_jar', default=True,
                         required="--nauto" in sys.argv or "-na" in sys.argv, help=f"Remap the jar (only if auto off)")
-    parser.add_argument('--delete_dep', '-dd', nargs='?', const=True, type=str2bool, dest='delete_dep', default=True,
-                        required="--nauto" in sys.argv or "-na" in sys.argv,
-                        help=f"Delete the dependencies (only if auto off)")
     parser.add_argument('--decompile', '-dec', nargs='?', const=True, type=str2bool, dest='decompile', default=True,
                         required="--nauto" in sys.argv or "-na" in sys.argv, help=f"Decompile (only if auto off)")
     parser.add_argument('--quiet', '-q', dest='quiet', action='store_true', default=False,
@@ -636,7 +614,6 @@ def main():
                 args.remap_mapping = str2bool(input('Remap mappings to tsrg? (Y/n): ') or True)
                 args.download_jar = str2bool(input(f'Get {version}-{side}.jar? (Y/n): ') or True)
                 args.remap_jar = str2bool(input('Remap? (Y/n): ') or True)
-                args.delete_dep = str2bool(input('Delete Dependencies? (Y/n): ') or True)
                 args.decompile = str2bool(input('Decompile? (Y/n): ') or True)
         
         steps = False 
@@ -646,7 +623,6 @@ def main():
                 'remap_mapping': args.remap_mapping,
                 'download_jar': args.download_jar,
                 'remap_jar': args.remap_jar,
-                'delete_dep': args.delete_dep,
                 'decompile': args.decompile,
             }
 
