@@ -571,10 +571,11 @@ def main():
         raise Exception("Error getting latest versions, please refresh cache")
     # for arguments
     parser = argparse.ArgumentParser(description='Decompile Minecraft source code')
-    parser.add_argument('--mcversion', '-mcv', type=str, dest='mcversion',
+    parser.add_argument('--mcversion', '-mcv', type=str, dest='mcversion', default=latest,
                         help=f"The version you want to decompile (alid version starting from 19w36a (snapshot) and 1.14.4 (releases))\n"
-                             f"Use 'snap' for latest snapshot ({snapshot}) or 'latest' for latest version ({latest})\n"
-                             f"Specifying this will disable interactive mode")
+                             f"Use 'snap' for latest snapshot ({snapshot}) or 'latest' for latest version ({latest})")
+    parser.add_argument('--interactive', '-i', type=str2bool, default=False,
+                        help="Enable an interactive CLI to specify options (all other command line arguments, besides --quiet, will be ignored)")
     parser.add_argument('--side', '-s', type=str, dest='side', default="client",
                         help='The side you want to decompile (either client or server)')
     parser.add_argument('--clean', '-c', dest='clean', action='store_true', default=False,
@@ -613,7 +614,7 @@ def main():
     args = parser.parse_args()
 
     try:
-        if not args.mcversion:
+        if args.interactive:
             # Enable interactive mode
 
             args.clean = input("Do you want to clean up old runs? (y/N): ") in ["y", "yes"]
