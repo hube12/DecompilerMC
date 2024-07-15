@@ -460,12 +460,12 @@ def convert_mappings(version, side, quiet):
         print("Mappings converted!")
 
 
-def make_paths(version, side, removal_bool, force, forceno):
+def make_paths(version, side, clean, force, forceno):
     path = Path(f'mappings/{version}')
     if not path.exists():
         path.mkdir(parents=True)
     else:
-        if removal_bool:
+        if clean:
             shutil.rmtree(path)
             path.mkdir(parents=True)
     path = Path(f'versions/{version}')
@@ -473,15 +473,15 @@ def make_paths(version, side, removal_bool, force, forceno):
         path.mkdir(parents=True)
     else:
         path = Path(f'versions/{version}/version.json')
-        if path.is_file() and removal_bool:
+        if path.is_file() and clean:
             path.unlink()
     if Path("versions").exists():
         path = Path(f'versions/version_manifest.json')
-        if path.is_file() and removal_bool:
+        if path.is_file() and clean:
             path.unlink()
 
     path = Path(f'versions/{version}/{side}.jar')
-    if path.exists() and path.is_file() and removal_bool:
+    if path.exists() and path.is_file() and clean:
         if force:
             path = Path(f'versions/{version}')
             shutil.rmtree(path)
@@ -517,7 +517,7 @@ def make_paths(version, side, removal_bool, force, forceno):
     if not path.exists():
         path.mkdir(parents=True)
     else:
-        if removal_bool:
+        if clean:
             shutil.rmtree(path)
             path.mkdir(parents=True)
     return version
@@ -535,7 +535,7 @@ def run(version, side, decompiler="cfr", quiet=True, clean=False, force=False, f
     convert_mappings(version, side, quiet)
     get_version_jar(version, side, quiet)
     remap(version, side, quiet)
-    
+
     decompile(decompiler, decompiled_version, version, side, quiet, force)
 
     return decompiled_version
