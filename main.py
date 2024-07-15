@@ -19,12 +19,14 @@ from urllib.error import HTTPError, URLError
 
 assert sys.version_info >= (3, 7)
 
-CFR_VERSION = "0.152"
 SPECIAL_SOURCE_VERSION = "1.11.4"
 MANIFEST_LOCATION = "https://piston-meta.mojang.com/mc/game/version_manifest_v2.json"
 CLIENT = "client"
 SERVER = "server"
-
+DECOMPILERS = {
+    "fernflower": {},
+    "cfr": {"version": "0.152"}
+}
 
 def get_minecraft_path():
     if sys.platform.startswith('linux'):
@@ -294,7 +296,7 @@ def remap(version, side, quiet):
         print('Done in %.1fs' % t)
 
 
-def decompile_fern_flower(decompiled_version, version, side, quiet, force):
+def decompile_fernflower(decompiled_version, version, side, quiet, force):
     if not quiet:
         print('=== Decompiling using FernFlower (silent) ===')
     t = time.time()
@@ -341,9 +343,9 @@ def decompile_cfr(decompiled_version, version, side, quiet):
         print('=== Decompiling using CFR (silent) ===')
     t = time.time()
     path = Path(f'./src/{version}-{side}-temp.jar')
-    cfr = Path(f'./lib/cfr-{CFR_VERSION}.jar')
+    cfr = Path(f'./lib/cfr-{DECOMPILERS['cfr']['version']}.jar')
     if not (path.exists() and cfr.exists()):
-        raise Exception(f'ERROR: Missing files: ./lib/cfr-{CFR_VERSION}.jar or ./src/{version}-{side}-temp.jar')
+        raise Exception(f'ERROR: Missing files: ./lib/cfr-{DECOMPILERS['cfr']['version']}.jar or ./src/{version}-{side}-temp.jar')
 
     path = path.resolve()
     cfr = cfr.resolve()
@@ -364,6 +366,13 @@ def decompile_cfr(decompiled_version, version, side, quiet):
     if not quiet:
         t = time.time() - t
         print('Done in %.1fs' % t)
+
+
+def decompile(decompiler, decompiled_version, version, side, quiet, force):
+    if decompiler == "cfr":
+        decompile_cfr(decompiled_version, version, side, quiet)
+    else:
+        decompile_fernflower(decompiled_version, version, side, quiet, force)
 
 
 def remove_brackets(line, counter):
@@ -531,6 +540,30 @@ def delete_dependencies(version, side):
             z.write(f, arcname=f[len(path) + 1:])
 
 
+def run(version, side, decompiler="cfr", quiet=True, clean=False, force=False, forceno=True, steps=False):
+    if not quiet:
+        print("Decompiling using official Mojang mappings...")
+
+    decompiled_version = make_paths(version, side, clean, force, forceno)
+    get_global_manifest(quiet)
+    get_version_manifest(version, quiet)
+
+    if not steps or steps.get('download_mapping'):
+        get_mappings(version, side, quiet)
+    if not steps or steps.get('remap_mapping'):
+        convert_mappings(version, side, quiet)
+    if not steps or steps.get('download_jar'):
+        get_version_jar(version, side, quiet)
+    if not steps or steps.get('remap_jar'):
+        remap(version, side, quiet)
+    if steps and steps.get('delete_dep'):
+        delete_dependencies(version, side, quiet)
+    if not steps or steps.get('decompile'):
+        decompile(decompiler, decompiled_version, version, side, quiet, force)
+
+    return decompiled_version
+
+
 def main():
     check_java()
     snapshot, latest = get_latest_version()
@@ -540,7 +573,8 @@ def main():
     parser = argparse.ArgumentParser(description='Decompile Minecraft source code')
     parser.add_argument('--mcversion', '-mcv', type=str, dest='mcversion',
                         help=f"The version you want to decompile (alid version starting from 19w36a (snapshot) and 1.14.4 (releases))\n"
-                             f"Use 'snap' for latest snapshot ({snapshot}) or 'latest' for latest version ({latest})")
+                             f"Use 'snap' for latest snapshot ({snapshot}) or 'latest' for latest version ({latest})\n"
+                             f"Specifying this will disable interactive mode")
     parser.add_argument('--side', '-s', type=str, dest='side', default="client",
                         help='The side you want to decompile (either client or server)')
     parser.add_argument('--clean', '-c', dest='clean', action='store_true', default=False,
@@ -579,109 +613,44 @@ def main():
     args = parser.parse_args()
 
     try:
-        if args.mcversion:
-            use_flags = True
-        if not args.quiet:
-            print("Decompiling using official mojang mappings (Default option are in uppercase, you can just enter)")
-        if use_flags:
-            removal_bool = args.clean
-        else:
-            removal_bool = 1 if input("Do you want to clean up old runs? (y/N): ") in ["y", "yes"] else 0
-        if use_flags:
-            decompiler = args.decompiler
-        else:
-            decompiler = input("Please input your decompiler of choice: cfr or fernflower (CFR/f): ")
-        decompiler = decompiler.lower() if decompiler.lower() in ["fernflower", "cfr", "f"] else "cfr"
-        if use_flags:
-            version = args.mcversion
-            if version is None:
-                raise Exception("A version must be defined using --mcversion <version> (such as 'latest' or 'snap')")
-        else:
+        if not args.mcversion:
+            # Enable interactive mode
+
+            args.clean = input("Do you want to clean up old runs? (y/N): ") in ["y", "yes"]
+
             version = input(f"Please input a valid version starting from 19w36a (snapshot) and 1.14.4 (releases),\n" +
                             f"Use 'snap' for latest snapshot ({snapshot}) or 'latest' for latest version ({latest}): ") or latest
-        if version in ["snap", "s", "snapshot"]:
-            version = snapshot
-        if version in ["latest", "l"]:
-            version = latest
-        if use_flags:
-            side = args.side
-        else:
-            side = input("Please select either client or server side (C/s): ")
-        side = side.lower() if side.lower() in ["client", "server", "c", "s"] else CLIENT
-        side = CLIENT if side in ["client", "c"] else SERVER
-        decompiled_version = make_paths(version, side, removal_bool, args.force, args.forceno)
-        get_global_manifest(args.quiet)
-        get_version_manifest(version, args.quiet)
-        if use_flags:
-            r = not args.nauto
-        else:
-            r = input("Auto Mode? (Y/n): ") or "y"
-            r = r.lower() == "y"
-        if r:
-            get_mappings(version, side, args.quiet)
-            convert_mappings(version, side, args.quiet)
-            get_version_jar(version, side, args.quiet)
-            remap(version, side, args.quiet)
-            if decompiler.lower() == "cfr":
-                decompile_cfr(decompiled_version, version, side, args.quiet)
-            else:
-                decompile_fern_flower(decompiled_version, version, side, args.quiet, args.force)
-            if not args.quiet:
-                print("===FINISHED===")
-                print(f"output is in /src/{version}")
-                input("Press Enter key to exit")
-            sys.exit(0)
+            if version in ["snap", "s", "snapshot"]:
+                version = snapshot
+            if version in ["latest", "l"]:
+                version = latest
+            args.mcversion = version
 
-        if use_flags:
-            r = args.download_mapping
-        else:
-            r = input('Download mappings? (y/n): ') or "y"
-            r = r.lower() == "y"
-        if r:
-            get_mappings(version, side, args.quiet)
+            args.side = SERVER if input("Please select either client or server side (C/s): ").lower() in ["server", "s"] else CLIENT
+            args.decompiler = "fernflower" if input("Please input your decompiler of choice: cfr or fernflower (CFR/f): ").lower() in ["fernflower", "f"] else "cfr"
+            args.nauto = not str2bool(input("Auto Mode? (Y/n): "))
 
-        if use_flags:
-            r = args.remap_mapping
-        else:
-            r = input('Remap mappings to tsrg? (y/n): ') or "y"
-            r = r.lower() == "y"
-        if r:
-            convert_mappings(version, side, args.quiet)
+            if args.nauto:
+                args.download_mapping = str2bool(input('Download mappings? (Y/n): ') or True)
+                args.remap_mapping = str2bool(input('Remap mappings to tsrg? (Y/n): ') or True)
+                args.download_jar = str2bool(input(f'Get {version}-{side}.jar? (Y/n): ') or True)
+                args.remap_jar = str2bool(input('Remap? (Y/n): ') or True)
+                args.delete_dep = str2bool(input('Delete Dependencies? (Y/n): ') or True)
+                args.decompile = str2bool(input('Decompile? (Y/n): ') or True)
+        
+        steps = False 
+        if args.nauto:
+            steps = {
+                'download_mapping': args.download_mapping,
+                'remap_mapping': args.remap_mapping,
+                'download_jar': args.download_jar,
+                'remap_jar': args.remap_jar,
+                'delete_dep': args.delete_dep,
+                'decompile': args.decompile,
+            }
 
-        if use_flags:
-            r = args.download_jar
-        else:
-            r = input(f'Get {version}-{side}.jar ? (y/n): ') or "y"
-            r = r.lower() == "y"
-        if r:
-            get_version_jar(version, side, args.quiet)
+        decompiled_version = run(args.mcversion, args.side, args.decompiler, args.quiet, args.clean, args.force, args.forceno, steps)
 
-        if use_flags:
-            r = args.remap_jar
-        else:
-            r = input('Remap? (y/n): ') or "y"
-            r = r.lower() == "y"
-        if r:
-            remap(version, side, args.quiet)
-
-        if use_flags:
-            r = args.delete_dep
-        else:
-            r = input('Delete Dependencies? (y/n): ') or "y"
-            r = r.lower() == "y"
-        if r:
-            delete_dependencies(version, side)
-
-        if use_flags:
-            r = args.decompile
-        else:
-            r = input('Decompile? (y/n): ') or "y"
-            r = r.lower() == "y"
-        if r:
-            if decompiler == "cfr":
-                decompile_cfr(decompiled_version, version, side, args.quiet)
-            else:
-                decompile_fern_flower(decompiled_version, version, side, args.quiet, args.force)
     except KeyboardInterrupt:
         if not args.quiet:
             print("Keyboard interrupt detected, exiting")
