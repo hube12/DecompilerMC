@@ -241,13 +241,13 @@ def get_mappings(version, side, quiet):
             jfile = json.load(f)
             url = jfile['downloads']
             if side == CLIENT:  # client:
-                if url['client_mappings']:
+                if url.get('client_mappings'):
                     url = url['client_mappings']['url']
                 else:
                     if not quiet:
                         print(f'Error: Missing client mappings for {version}')
             elif side == SERVER:  # server
-                if url['server_mappings']:
+                if url.get('server_mappings'):
                     url = url['server_mappings']['url']
                 else:
                     if not quiet:
