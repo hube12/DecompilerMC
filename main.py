@@ -235,7 +235,8 @@ def get_version_jar(target_version, side, quiet):
 
 def get_mappings(version, side, quiet):
     mappings_file = cwd / "mappings" / version / f"{side}.txt"
-    if mappings_file.exists() and mappings_file.is_file():
+    converted_mappings_file = cwd / "mappings" / version / f"{side}.tsrg"
+    if (mappings_file.exists() and mappings_file.is_file()) or (converted_mappings_file.exists() and converted_mappings_file.is_file()):
         if not quiet:
             print("Mappings already exist, not downloading again")
         return
@@ -386,7 +387,15 @@ def remap_file_path(path):
 
 def convert_mappings(version, side, quiet):
     dir_path = cwd / "mappings" / version
-    with open(dir_path / f"{side}.txt", 'r') as inputFile:
+    mappings_file = dir_path / f"{side}.txt"
+    converted_mappings_file = dir_path / f"{side}.tsrg"
+
+    if (converted_mappings_file.exists() and converted_mappings_file.is_file()):
+        if not quiet:
+            print(f"{side} mappings file for {version} already converted, not converting again")
+        return
+
+    with open(mappings_file, 'r') as inputFile:
         file_name = {}
         for line in inputFile.readlines():
             if line.startswith('#'):  # comment at the top, could be stripped
@@ -396,7 +405,7 @@ def convert_mappings(version, side, quiet):
                 obf_name = obf_name.split(":")[0]
                 file_name[remap_file_path(deobf_name)] = obf_name  # save it to compare to put the Lb
 
-    with open(dir_path / f"{side}.txt", 'r') as inputFile, open(dir_path / f"{side}.tsrg", 'w+') as outputFile:
+    with open(mappings_file, 'r') as inputFile, open(converted_mappings_file, 'w+') as outputFile:
         for line in inputFile.readlines():
             if line.startswith('#'):  # comment at the top, could be stripped
                 continue
