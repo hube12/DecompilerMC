@@ -287,10 +287,11 @@ def remap(version, side, quiet):
     path = path.resolve()
     mapp = mapp.resolve()
     specialsource = specialsource.resolve()
+    outpath = cwd / "src" / f"{version}-{side}-temp.jar"
     subprocess.run(['java',
                     '-jar', str(specialsource),
                     '--in-jar', str(path),
-                    '--out-jar', f'./src/{version}-{side}-temp.jar',
+                    '--out-jar', str(outpath),
                     '--srg-in', str(mapp),
                     "--kill-lvt"  # kill snowmen
                     ], check=True, capture_output=quiet)
@@ -355,12 +356,13 @@ def decompile_cfr(decompiled_version, version, side, quiet):
 
     path = path.resolve()
     cfr = cfr.resolve()
+    outpath = cwd / "src" / decompiled_version / side
     subprocess.run(['java',
                     '-Xmx4G',
                     '-Xms1G',
                     '-jar', str(cfr),
                     str(path),
-                    '--outputdir', f'./src/{decompiled_version}/{side}',
+                    '--outputdir', str(outpath),
                     '--caseinsensitivefs', 'true',
                     "--silent", "true"
                     ], check=True, capture_output=quiet)
