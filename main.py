@@ -29,6 +29,8 @@ DECOMPILERS = {
     "cfr": {"version": "0.152"}
 }
 
+cwd = Path(__file__).parent
+
 def get_minecraft_path():
     if sys.platform.startswith('linux'):
         return Path("~/.minecraft")
@@ -110,7 +112,7 @@ def check_java():
 
 
 def get_global_manifest(quiet):
-    version_manifest = Path(f"versions/version_manifest.json")
+    version_manifest = cwd / "versions" / "version_manifest.json"
     if version_manifest.exists() and version_manifest.is_file():
         if not quiet:
             print("Manifest already exists, not downloading again")
@@ -139,7 +141,7 @@ def download_file(url, filename, quiet=True):
 
 
 def get_latest_version():
-    path_to_json = Path(__file__).parent / 'tmp/manifest.json'
+    path_to_json = cwd / "tmp" / "manifest.json"
     download_file(MANIFEST_LOCATION, path_to_json, True)
     snapshot = None
     version = None
@@ -154,12 +156,12 @@ def get_latest_version():
 
 
 def get_version_manifest(target_version, quiet):
-    version_json = Path(f"versions/{target_version}/version.json")
+    version_json = cwd / "versions" / target_version / "version.json"
     if version_json.exists() and version_json.is_file():
         if not quiet:
             print("Version manifest already exists, not downloading again")
         return
-    version_manifest = Path('versions/version_manifest.json')
+    version_manifest = cwd / "versions" / "version_manifest.json"
     if not (version_manifest.exists() and version_manifest.is_file()):
         raise Exception('Missing manifest file: version.json')
     
@@ -182,8 +184,8 @@ def sha256(fname: Union[Union[str, bytes], int]):
 
 
 def get_version_jar(target_version, side, quiet):
-    version_json = Path(f"versions/{target_version}/version.json")
-    jar_path = Path(f"versions/{target_version}/{side}.jar")
+    version_json = cwd / "versions" / target_version / "version.json"
+    jar_path = cwd / "versions" / target_version / f"{side}.jar"
     if jar_path.exists() and jar_path.is_file():
         if not quiet:
             print(f"{jar_path} already exists, not downloading again")
@@ -232,12 +234,12 @@ def get_version_jar(target_version, side, quiet):
 
 
 def get_mappings(version, side, quiet):
-    mappings_file = Path(f'mappings/{version}/{side}.txt')
+    mappings_file = cwd / "mappings" / version / f"{side}.txt"
     if mappings_file.exists() and mappings_file.is_file():
         if not quiet:
             print("Mappings already exist, not downloading again")
         return
-    version_json = Path(f'versions/{version}/version.json')
+    version_json = cwd / "versions" / version / "version.json"
     if version_json.exists() and version_json.is_file():
         if not quiet:
             print(f'Found {version}.json')
@@ -269,17 +271,17 @@ def remap(version, side, quiet):
     if not quiet:
         print('=== Remapping jar using SpecialSource ====')
     t = time.time()
-    path = Path(f'versions/{version}/{side}.jar')
+    path = cwd / "versions" / version / f"{side}.jar"
     # that part will not be assured by arguments
     if not path.exists() or not path.is_file():
-        path_temp = (mc_path / f'versions/{version}/{version}.jar').expanduser()
+        path_temp = (mc_path / "versions" / version / f"{version}.jar").expanduser()
         if path_temp.exists() and path_temp.is_file():
             r = input("Error, defaulting to client.jar from your local Minecraft folder, continue? (y/n)") or "y"
             if r != "y":
                 sys.exit(-1)
             path = path_temp
-    mapp = Path(f'mappings/{version}/{side}.tsrg')
-    specialsource = Path(f'./lib/SpecialSource-{SPECIAL_SOURCE_VERSION}.jar')
+    mapp = cwd / "mappings" / version / f"{side}.tsrg"
+    specialsource = cwd / "lib" / f"SpecialSource-{SPECIAL_SOURCE_VERSION}.jar"
     if not (path.exists() and mapp.exists() and specialsource.exists() and path.is_file() and mapp.is_file() and specialsource.is_file()):
        raise Exception(f'ERROR: Missing files: ./lib/SpecialSource-{SPECIAL_SOURCE_VERSION}.jar or mappings/{version}/{side}.tsrg or versions/{version}/{side}.jar')
     path = path.resolve()
@@ -302,8 +304,8 @@ def decompile_fernflower(decompiled_version, version, side, quiet, force):
     if not quiet:
         print('=== Decompiling using FernFlower (silent) ===')
     t = time.time()
-    path = Path(f'./src/{version}-{side}-temp.jar')
-    fernflower = Path('./lib/fernflower.jar')
+    path = cwd / "src" / f"{version}-{side}-temp.jar"
+    fernflower = cwd / "lib" / "fernflower.jar"
     if not (path.exists() and fernflower.exists()):
         raise Exception(f'ERROR: Missing files: ./lib/fernflower.jar or ./src/{version}-{side}-temp.jar')
 
@@ -323,11 +325,13 @@ def decompile_fernflower(decompiled_version, version, side, quiet, force):
                     ], check=True, capture_output=quiet)
     if not quiet:
         print(f'- Removing -> {version}-{side}-temp.jar')
-    os.remove(f'./src/{version}-{side}-temp.jar')
+    os.remove(path)
     if not quiet:
         print("Decompressing remapped jar to directory")
-    with zipfile.ZipFile(f'./src/{decompiled_version}/{side}/{version}-{side}-temp.jar') as z:
-        z.extractall(path=f'./src/{decompiled_version}/{side}')
+
+    path = cwd / "src" / decompiled_version / side / f"{version}-{side}-temp.jar"
+    with zipfile.ZipFile() as z:
+        z.extractall(path=path.parent)
     t = time.time() - t
     if not quiet:
         print(f'Done in %.1fs (file was decompressed in {decompiled_version}/{side})' % t)
@@ -335,17 +339,17 @@ def decompile_fernflower(decompiled_version, version, side, quiet, force):
         response = input() or "y"
         if response == 'y':
             print(f'- Removing -> {decompiled_version}/{side}/{version}-{side}-temp.jar')
-            os.remove(f'./src/{decompiled_version}/{side}/{version}-{side}-temp.jar')
+            os.remove(path)
     if force:
-        os.remove(f'./src/{decompiled_version}/{side}/{version}-{side}-temp.jar')
+        os.remove(path)
 
 
 def decompile_cfr(decompiled_version, version, side, quiet):
     if not quiet:
         print('=== Decompiling using CFR (silent) ===')
     t = time.time()
-    path = Path(f'./src/{version}-{side}-temp.jar')
-    cfr = Path(f'./lib/cfr-{DECOMPILERS['cfr']['version']}.jar')
+    path = cwd / "src" / f"{version}-{side}-temp.jar"
+    cfr = cwd / "lib" / f"cfr-{DECOMPILERS['cfr']['version']}.jar"
     if not (path.exists() and cfr.exists()):
         raise Exception(f'ERROR: Missing files: ./lib/cfr-{DECOMPILERS['cfr']['version']}.jar or ./src/{version}-{side}-temp.jar')
 
@@ -363,8 +367,8 @@ def decompile_cfr(decompiled_version, version, side, quiet):
     if not quiet:
         print(f'- Removing -> {version}-{side}-temp.jar')
         print(f'- Removing -> summary.txt')
-    os.remove(f'./src/{version}-{side}-temp.jar')
-    os.remove(f'./src/{decompiled_version}/{side}/summary.txt')
+    os.remove(path)
+    os.remove(cwd / "src" / decompiled_version / side / "summary.txt")
     if not quiet:
         t = time.time() - t
         print('Done in %.1fs' % t)
@@ -391,7 +395,8 @@ def remap_file_path(path):
 
 
 def convert_mappings(version, side, quiet):
-    with open(f'mappings/{version}/{side}.txt', 'r') as inputFile:
+    dir_path = cwd / "mappings" / version
+    with open(dir_path / f"{side}.txt", 'r') as inputFile:
         file_name = {}
         for line in inputFile.readlines():
             if line.startswith('#'):  # comment at the top, could be stripped
@@ -401,8 +406,7 @@ def convert_mappings(version, side, quiet):
                 obf_name = obf_name.split(":")[0]
                 file_name[remap_file_path(deobf_name)] = obf_name  # save it to compare to put the Lb
 
-    with open(f'mappings/{version}/{side}.txt', 'r') as inputFile, open(f'mappings/{version}/{side}.tsrg',
-                                                                        'w+') as outputFile:
+    with open(dir_path / f"{side}.txt", 'r') as inputFile, open(dir_path / f"{side}.tsrg", 'w+') as outputFile:
         for line in inputFile.readlines():
             if line.startswith('#'):  # comment at the top, could be stripped
                 continue
@@ -462,53 +466,53 @@ def convert_mappings(version, side, quiet):
         print("Mappings converted!")
 
 
-def make_paths(version, side, clean, force):
-    path = Path(f'mappings/{version}')
+def make_paths(version, side, quiet, clean, force):
+    path = cwd / "mappings" / version
     if not path.exists():
         path.mkdir(parents=True)
     else:
         if clean:
             shutil.rmtree(path)
             path.mkdir(parents=True)
-    path = Path(f'versions/{version}')
+    path = cwd / "versions" / version
     if not path.exists():
         path.mkdir(parents=True)
     else:
-        path = Path(f'versions/{version}/version.json')
+        path = cwd / "versions" / version / "version.json"
         if path.is_file() and clean:
             path.unlink()
     if Path("versions").exists():
-        path = Path(f'versions/version_manifest.json')
+        path = cwd / "versions" / "version_manifest.json"
         if path.is_file() and clean:
             path.unlink()
 
-    path = Path(f'versions/{version}/{side}.jar')
+    path = cwd / "versions" / version / side
     if path.exists() and path.is_file() and clean:
         if force:
-            path = Path(f'versions/{version}')
+            path = cwd / Path(f'versions/{version}')
             shutil.rmtree(path)
             path.mkdir(parents=True)
         else:
             aw = input(f"versions/{version}/{side}.jar already exists, wipe it (w) or ignore (i) ? ") or "i"
-            path = Path(f'versions/{version}')
+            path = cwd / Path(f'versions/{version}')
             if aw == "w":
                 shutil.rmtree(path)
                 path.mkdir(parents=True)
 
-    path = Path(f'src/{version}/{side}')
+    path = cwd / "src" / version / side
     if not path.exists():
         path.mkdir(parents=True)
     else:
         if force:
-            shutil.rmtree(Path(f"./src/{version}/{side}"))
+            shutil.rmtree(path)
         else:
             if not quiet:
                 print(f"{path} exists, creating new directory")
             version = version + side + "_" + str(random.getrandbits(128))
-        path = Path(f'src/{version}/{side}')
+        path = cwd / "src" / version / side
         path.mkdir(parents=True)
 
-    path = Path(f'tmp/{version}/{side}')
+    path = cwd / "tmp" / version / side
     if not path.exists():
         path.mkdir(parents=True)
     else:
@@ -519,7 +523,7 @@ def make_paths(version, side, clean, force):
 
 
 def run(version, side, decompiler="cfr", quiet=True, clean=False, force=False):
-    decompiled_version = make_paths(version, side, clean, force)
+    decompiled_version = make_paths(version, side, quiet, clean, force)
     get_global_manifest(quiet)
     get_version_manifest(version, quiet)
 
