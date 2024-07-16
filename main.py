@@ -522,7 +522,7 @@ def make_paths(version, side, quiet, clean, force):
     return version
 
 
-def run(version, side, decompiler="cfr", quiet=True, clean=False, force=False):
+def run(version, side, decompiler="cfr", quiet=False, clean=False, force=False):
     decompiled_version = make_paths(version, side, quiet, clean, force)
     get_global_manifest(quiet)
     get_version_manifest(version, quiet)
