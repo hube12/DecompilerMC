@@ -245,21 +245,9 @@ def get_mappings(version, side, quiet):
             print(f'Found {version}.json')
         with open(version_json) as f:
             jfile = json.load(f)
-            url = jfile['downloads']
-            if side == CLIENT:  # client:
-                if url.get('client_mappings'):
-                    url = url['client_mappings']['url']
-                else:
-                    if not quiet:
-                        print(f'Error: Missing client mappings for {version}')
-            elif side == SERVER:  # server
-                if url.get('server_mappings'):
-                    url = url['server_mappings']['url']
-                else:
-                    if not quiet:
-                        print(f'Error: Missing server mappings for {version}')
-            else:
-                raise Exception('ERROR, type not recognized')
+            url = jfile['downloads'].get(f'{side}_mappings', {}).get('url')
+            if not url:
+                raise Exception(f'Error: {side} mappings for {version} not available from version.json')
             if not quiet:
                 print(f'Downloading the mappings for {version}...')
             download_file(url, mappings_file, quiet)
