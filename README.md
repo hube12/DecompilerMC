@@ -38,22 +38,22 @@ By default we employ the nice guy strategy which is if the folder exist we creat
 if you actually need a specific path.
 
 Examples:
-- Decompile latest release without any output: `python3 main.py --mcv latest -q` 
-- Decompile latest snapshot server side with output: `python3 main.py --mcversion snap --side server` 
-- Decompile 1.14.4 client side with output cleaning any old runs:  `python3 main.py -v 1.14.4 -s client -f -q -c` 
+- Decompile latest release without any output: `python3 main.py latest -q` 
+- Decompile latest snapshot server side with output: `python3 main.py snap --side server` 
+- Decompile 1.14.4 client side with output cleaning any old runs:  `python3 main.py 1.14.4 -s client -f -q -c` 
 
 
 ```bash
-usage: main.py [-h] [--mcversion MCVERSION] [--interactive INTERACTIVE] [--side {client,server}] [--clean] [--force]
-               [--decompiler {fernflower,cfr}] [--quiet]
+usage: main.py [-h] [--interactive INTERACTIVE] [--side {client,server}] [--clean] [--force] [--decompiler {fernflower,cfr}] [--quiet] mcversion
 
 Decompile Minecraft source code
 
+positional arguments:
+  mcversion             The version you want to decompile (alid version starting from 19w36a (snapshot) and 1.14.4 (releases)) Use 'snap' for
+                        latest snapshot or 'latest' for latest version
+
 options:
   -h, --help            show this help message and exit
-  --mcversion MCVERSION, -v MCVERSION
-                        The version you want to decompile (alid version starting from 19w36a (snapshot) and 1.14.4 (releases)) Use 'snap' for
-                        latest snapshot (1.21) or 'latest' for latest version (1.21)
   --interactive INTERACTIVE, -i INTERACTIVE
                         Enable an interactive CLI to specify options (all other command line arguments, besides --quiet, will be ignored)
   --side {client,server}, -s {client,server}

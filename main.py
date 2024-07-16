@@ -546,7 +546,7 @@ def main():
         raise Exception("Error getting latest versions, please refresh cache")
     # for arguments
     parser = argparse.ArgumentParser(description='Decompile Minecraft source code')
-    parser.add_argument('--mcversion', '-v', type=str, dest='mcversion', default=latest,
+    parser.add_argument('mcversion', type=str, nargs="?", default=latest,
                         help=f"The version you want to decompile (alid version starting from 19w36a (snapshot) and 1.14.4 (releases))\n"
                              f"Use 'snap' for latest snapshot ({snapshot}) or 'latest' for latest version ({latest})")
     parser.add_argument('--interactive', '-i', type=str2bool, default=False,
