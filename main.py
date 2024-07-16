@@ -591,14 +591,12 @@ def main():
         if not args.quiet:
             print("===Error detected!===")
             traceback.print_exc()
-            input("Press Enter key to exit")
             sys.exit(-1)
         else:
             raise e
     if not args.quiet:
         print("===FINISHED===")
         print(f"output is in /src/{decompiled_version}")
-        input("Press Enter key to exit")
 
 
 if __name__ == "__main__":
