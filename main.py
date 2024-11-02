@@ -103,14 +103,16 @@ def check_java() -> None:
             results.append(which('java', path='/opt'))
     results = [path for path in results if path is not None]
     if not results:
-        raise RuntimeError('Java JDK is not installed! Please install a Java JDK from https://java.oracle.com, or install OpenJDK.')
+        raise RuntimeError(
+            'Java JDK is not installed! Please install a Java JDK from https://java.oracle.com, or install OpenJDK.')
 
 
 def get_global_manifest(quiet) -> None:
     versionManifsetPath = (PATH_TO_ROOT_DIR / "versions" / "version_manifest.json")
     if versionManifsetPath.is_file():
         if not quiet:
-            print(f"Manifest already exists; not downloading again. If another manifest is wanted, please delete manually before running the program (location: {versionManifsetPath}).")
+            print(
+                f"Manifest already exists; not downloading again. If another manifest is wanted, please delete manually before running the program (location: {versionManifsetPath}).")
         return
     download_file(MANIFEST_LOCATION, versionManifsetPath, quiet)
 
@@ -150,21 +152,22 @@ def get_latest_version() -> tuple[str, str]:
 
 
 def get_version_manifest(target_version: str, quiet) -> None:
-    versionPath = (PATH_TO_ROOT_DIR / "versions" / target_version / "version.json")
-    if versionPath.is_file():
+    version_path = (PATH_TO_ROOT_DIR / "versions" / target_version / "version.json")
+    if version_path.is_file():
         if not quiet:
-            print(f"Version manifest already exists; not downloading again. If another version manifest is wanted, please delete manually before running the program (location: {versionPath}).")
+            print(
+                f"Version manifest already exists; not downloading again. If another version manifest is wanted, please delete manually before running the program (location: {version_path}).")
         return
     path_to_json = (PATH_TO_ROOT_DIR / "versions" / "version_manifest.json")
-    if not path_to_json.exists() or not path_to_json.is_file(): raise RuntimeError(f'Missing manifest file: {path_to_json}')
+    if not path_to_json.exists() or not path_to_json.is_file(): raise RuntimeError(
+        f'Missing manifest file: {path_to_json}')
     path_to_json = path_to_json.resolve()
     with open(path_to_json) as f:
         versions = json.load(f)["versions"]
         for version in versions:
             if version.get("id") and version.get("id") == target_version and version.get("url"):
-                download_file(version.get("url"), versionPath, quiet)
+                download_file(version.get("url"), version_path, quiet)
                 break
-        
 
 
 def sha256(fname: Union[Union[str, bytes], int]) -> str:
@@ -177,23 +180,27 @@ def sha256(fname: Union[Union[str, bytes], int]) -> str:
 
 def get_version_jar(target_version: str, side: SideType, quiet) -> None:
     path_to_json = (PATH_TO_ROOT_DIR / "versions" / target_version / "version.json")
-    targetSidePath = (PATH_TO_ROOT_DIR / "versions" / target_version / f"{side}.jar")
-    if targetSidePath.is_file():
+    target_side_path = (PATH_TO_ROOT_DIR / "versions" / target_version / f"{side}.jar")
+    if target_side_path.is_file():
         if not quiet:
-            print(f"Version jar already exists; not downloading again. If another version jar is wanted, please delete manually before running the program (location: {targetSidePath}).")
+            print(
+                f"Version jar already exists; not downloading again. If another version jar is wanted, please delete manually before running the program (location: {target_side_path}).")
         return
-    if not path_to_json.exists() or not path_to_json.is_file(): raise RuntimeError(f'Missing manifest file: {path_to_json}')
+    if not path_to_json.exists() or not path_to_json.is_file(): raise RuntimeError(
+        f'Missing manifest file: {path_to_json}')
     path_to_json = path_to_json.resolve()
     with open(path_to_json) as f:
         jsn = json.load(f)
-        if not jsn.get("downloads") or not jsn.get("downloads").get(side) or not jsn.get("downloads").get(side).get("url"):
+        if not jsn.get("downloads") or not jsn.get("downloads").get(side) or not jsn.get("downloads").get(side).get(
+            "url"):
             raise RuntimeError("Could not download jar, missing fields")
-        download_file(jsn.get("downloads").get(side).get("url"), targetSidePath, quiet)
+        download_file(jsn.get("downloads").get(side).get("url"), target_side_path, quiet)
         # In case the server is newer than 21w39a you need to actually extract it first from the archive
         if side == SERVER:
-            if not targetSidePath.exists():
-                raise RuntimeError(f"Jar was maybe downloaded but not located, this is a failure, check path at {targetSidePath}")
-            with zipfile.ZipFile(targetSidePath, mode="r") as z:
+            if not target_side_path.exists():
+                raise RuntimeError(
+                    f"Jar was maybe downloaded but not located, this is a failure, check path at {target_side_path}")
+            with zipfile.ZipFile(target_side_path, mode="r") as z:
                 content = None
                 try:
                     content = z.read(Path(f"META-INF", "versions.list"))
@@ -203,12 +210,14 @@ def get_version_jar(target_version: str, side: SideType, quiet) -> None:
                 if content is not None:
                     element = content.split(b"\t")
                     if len(element) != 3:
-                        raise RuntimeError(f"Jar should be extracted but version list is not in the correct format, expected 3 fields, got {len(element)} for {content}")
+                        raise RuntimeError(
+                            f"Jar should be extracted but version list is not in the correct format, expected 3 fields, got {len(element)} for {content}")
                     version_hash = element[0].decode()
                     version = element[1].decode()
                     path = element[2].decode()
                     if version != target_version and not quiet:
-                        print(f"Warning: received version ({version}) does not match the targeted version ({target_version}).")
+                        print(
+                            f"Warning: received version ({version}) does not match the targeted version ({target_version}).")
                     new_jar_path = (PATH_TO_ROOT_DIR / "versions" / target_version)
                     try:
                         new_jar_path = z.extract(Path("META-INF", "versions", path), new_jar_path)
@@ -218,9 +227,10 @@ def get_version_jar(target_version: str, side: SideType, quiet) -> None:
                         raise RuntimeError(f"New {side} jar could not be extracted from archive at {new_jar_path}.")
                     file_hash = sha256(new_jar_path)
                     if file_hash != version_hash:
-                        raise RuntimeError(f"Extracted file's hash ({file_hash}) and expected hash ({version_hash}) did not match.")
+                        raise RuntimeError(
+                            f"Extracted file's hash ({file_hash}) and expected hash ({version_hash}) did not match.")
                     try:
-                        shutil.move((PATH_TO_ROOT_DIR / new_jar_path), targetSidePath)
+                        shutil.move((PATH_TO_ROOT_DIR / new_jar_path), target_side_path)
                         shutil.rmtree((PATH_TO_ROOT_DIR / "versions" / target_version / "META-INF"))
                     except Exception as e:
                         raise RuntimeError("Exception while removing the temp file", e)
@@ -232,7 +242,8 @@ def get_mappings(version: str, side: SideType, quiet) -> None:
     versionSidePath = (PATH_TO_ROOT_DIR / "mappings" / version / f"{side}.txt")
     if versionSidePath.is_file():
         if not quiet:
-            print(f"Mappings already exist; not downloading again. If other mappings are wanted, please delete manually before running the program (location: {versionSidePath}).")
+            print(
+                f"Mappings already exist; not downloading again. If other mappings are wanted, please delete manually before running the program (location: {versionSidePath}).")
         return
     path_to_json = (PATH_TO_ROOT_DIR / "versions" / version / "version.json")
     if not path_to_json.exists() or not path_to_json.is_file():
@@ -245,19 +256,21 @@ def get_mappings(version: str, side: SideType, quiet) -> None:
         url = jfile['downloads']
         if side == CLIENT:  # client:
             if 'client_mappings' not in url or 'url' not in url['client_mappings']:
-                #TODO: Clean up failed run before raising
+                # TODO: Clean up failed run before raising
                 raise RuntimeError(f'Could not find client mappings for {version}')
             url = url['client_mappings']['url']
         elif side == SERVER:  # server
             if 'server_mappings' not in url or 'url' not in url['server_mappings']:
-                #TODO: Clean up failed run before raising
+                # TODO: Clean up failed run before raising
                 raise RuntimeError(f'Could not find server mappings for {version}')
             url = url['server_mappings']['url']
         else:
             raise RuntimeError('Type not recognized.')
         if not quiet:
             print(f'Downloading the mappings for {version}...')
-        download_file(url, (PATH_TO_ROOT_DIR / "mappings" / version / f"{'client' if side == CLIENT else 'server'}.txt"), quiet)
+        download_file(url,
+                      (PATH_TO_ROOT_DIR / "mappings" / version / f"{'client' if side == CLIENT else 'server'}.txt"),
+                      quiet)
 
 
 def remap(version: str, side: SideType, quiet) -> None:
@@ -284,21 +297,21 @@ def remap(version: str, side: SideType, quiet) -> None:
         raise RuntimeError(f'Missing file: {mapp}')
     mapp = mapp.resolve()
 
-    specialsource = (PATH_TO_ROOT_DIR / "lib"/ f"SpecialSource-{SPECIAL_SOURCE_VERSION}.jar")
-    if not specialsource.exists() or not specialsource.is_file():
-        raise RuntimeError(f'Missing file: {specialsource}')
-    specialsource = specialsource.resolve()
-    outJarPath = (PATH_TO_ROOT_DIR / "src" / f"{version}-{side}-temp.jar")
+    special_source_path = (PATH_TO_ROOT_DIR / "lib" / f"SpecialSource-{SPECIAL_SOURCE_VERSION}.jar")
+    if not special_source_path.exists() or not special_source_path.is_file():
+        raise RuntimeError(f'Missing file: {special_source_path}')
+    special_source_path = special_source_path.resolve()
+    out_jar_path = (PATH_TO_ROOT_DIR / "src" / f"{version}-{side}-temp.jar")
 
     subprocess.run(['java',
-                    '-jar', specialsource.__str__(),
+                    '-jar', special_source_path.__str__(),
                     '--in-jar', path.__str__(),
-                    '--out-jar', outJarPath,
+                    '--out-jar', out_jar_path,
                     '--srg-in', mapp.__str__(),
                     "--kill-lvt"  # kill snowmen
                     ], check=True, capture_output=quiet)
     if not quiet:
-        print(f'Created {outJarPath}.')
+        print(f'Created {out_jar_path}.')
         t = time.time() - t
         print('Done in %.1fs' % t)
 
@@ -318,7 +331,7 @@ def decompile_fern_flower(decompiled_version: str, version: str, side: SideType,
         raise RuntimeError(f'Missing file: {fernflower}')
     fernflower = fernflower.resolve()
 
-    sideFolder = (PATH_TO_ROOT_DIR / "src" / decompiled_version / side)
+    side_folder = (PATH_TO_ROOT_DIR / "src" / decompiled_version / side)
     subprocess.run(['java',
                     '-Xmx4G',
                     '-Xms1G',
@@ -329,15 +342,15 @@ def decompile_fern_flower(decompiled_version: str, version: str, side: SideType,
                     '-lit=1',  # output numeric literals
                     '-asc=1',  # encode non-ASCII characters in string and character
                     '-log=WARN',
-                    path.__str__(), sideFolder
+                    path.__str__(), side_folder
                     ], check=True, capture_output=quiet)
     if not quiet:
         print(f'Removing {path}...')
     os.remove(path)
     if not quiet:
         print("Decompressing remapped jar to directory...")
-    with zipfile.ZipFile(sideFolder / f"{version}-{side}-temp.jar") as z:
-        z.extractall(path=sideFolder)
+    with zipfile.ZipFile(side_folder / f"{version}-{side}-temp.jar") as z:
+        z.extractall(path=side_folder)
     t = time.time() - t
     if not quiet:
         print(f'Done in %.1fs (file was decompressed in {decompiled_version}/{side})' % t)
@@ -345,10 +358,10 @@ def decompile_fern_flower(decompiled_version: str, version: str, side: SideType,
         print('Remove Extra Jar file? (y/n): ')
         response = input() or "y"
         if response == 'y':
-            print(f'Removing {sideFolder / f"{version}-{side}-temp.jar"}...')
-            os.remove(sideFolder / f"{version}-{side}-temp.jar")
+            print(f'Removing {side_folder / f"{version}-{side}-temp.jar"}...')
+            os.remove(side_folder / f"{version}-{side}-temp.jar")
     if force:
-        os.remove(sideFolder / f'{version}-{side}-temp.jar')
+        os.remove(side_folder / f'{version}-{side}-temp.jar')
 
 
 def decompile_cfr(decompiled_version: str, version: str, side: SideType, quiet) -> None:
@@ -356,8 +369,8 @@ def decompile_cfr(decompiled_version: str, version: str, side: SideType, quiet) 
         print('=== Decompiling using CFR (silent) ===')
     t = time.time()
 
-    path = (PATH_TO_ROOT_DIR / "src"/ f"{version}-{side}-temp.jar")
-    if not path.exists() or not path.is_file(): 
+    path = (PATH_TO_ROOT_DIR / "src" / f"{version}-{side}-temp.jar")
+    if not path.exists() or not path.is_file():
         raise RuntimeError(f'Missing file: {path}')
     path = path.resolve()
 
@@ -366,13 +379,13 @@ def decompile_cfr(decompiled_version: str, version: str, side: SideType, quiet) 
         raise RuntimeError(f'Missing file: {cfr}')
     cfr = cfr.resolve()
 
-    sideFolder = (PATH_TO_ROOT_DIR / "src" / decompiled_version / side)
+    side_folder = (PATH_TO_ROOT_DIR / "src" / decompiled_version / side)
     subprocess.run(['java',
                     '-Xmx4G',
                     '-Xms1G',
                     '-jar', cfr.__str__(),
                     path.__str__(),
-                    '--outputdir', sideFolder,
+                    '--outputdir', side_folder,
                     '--caseinsensitivefs', 'true',
                     "--silent", "true"
                     ], check=True, capture_output=quiet)
@@ -380,8 +393,8 @@ def decompile_cfr(decompiled_version: str, version: str, side: SideType, quiet) 
         print(f'Removing {path}...')
     os.remove(path)
     if not quiet:
-        print(f'Removing {sideFolder / "summary.txt"}...')
-    os.remove(sideFolder / "summary.txt")
+        print(f'Removing {side_folder / "summary.txt"}...')
+    os.remove(side_folder / "summary.txt")
     if not quiet:
         t = time.time() - t
         print('Done in %.1fs' % t)
@@ -401,8 +414,8 @@ def remap_file_path(path: str) -> str:
 
 
 def convert_mappings(version: str, side: SideType, quiet) -> None:
-    versionSidePath = (PATH_TO_ROOT_DIR / "mappings" / version / f"{side}.txt")
-    with open(versionSidePath, 'r') as inputFile:
+    version_side_path = (PATH_TO_ROOT_DIR / "mappings" / version / f"{side}.txt")
+    with open(version_side_path, 'r') as inputFile:
         file_name: dict[str, str] = {}
         for line in inputFile.readlines():
             if line.startswith('#'):  # comment at the top, could be stripped
@@ -412,7 +425,8 @@ def convert_mappings(version: str, side: SideType, quiet) -> None:
                 obf_name = obf_name.split(":")[0]
                 file_name[remap_file_path(deobf_name)] = obf_name  # save it to compare to put the Lb
 
-    with open(versionSidePath, 'r') as inputFile, open(PATH_TO_ROOT_DIR / "mappings" / version / f"{side}.tsrg", 'w+') as outputFile:
+    with open(version_side_path, 'r') as inputFile, open(PATH_TO_ROOT_DIR / "mappings" / version / f"{side}.tsrg",
+                                                         'w+') as outputFile:
         for line in inputFile.readlines():
             if line.startswith('#'):  # comment at the top, could be stripped
                 continue
@@ -429,7 +443,8 @@ def convert_mappings(version: str, side: SideType, quiet) -> None:
                     array_length_type = 0
 
                     method_type, array_length_type = remove_brackets(method_type, array_length_type)
-                    method_type = remap_file_path(method_type)  # remap the dots to / and add the L ; or remap to a primitives character
+                    method_type = remap_file_path(
+                        method_type)  # remap the dots to / and add the L ; or remap to a primitives character
                     method_type = "L" + file_name[
                         method_type] + ";" if method_type in file_name else method_type  # get the obfuscated name of the class
                     if "." in method_type:  # if the class is already packaged then change the name that the obfuscated gave
@@ -487,7 +502,7 @@ def make_paths(version: str, side: SideType, removal_bool, force, forceno) -> st
         path = (path / "version.json")
         if path.is_file() and removal_bool:
             path.unlink()
-            
+
     if (PATH_TO_ROOT_DIR / "versions").exists():
         path = (PATH_TO_ROOT_DIR / "versions" / "version_manifest.json")
         if path.is_file() and removal_bool:
@@ -516,7 +531,8 @@ def make_paths(version: str, side: SideType, removal_bool, force, forceno) -> st
             version = version + side + "_" + str(random.getrandbits(128))
             path = (PATH_TO_ROOT_DIR / "src" / version / side)
         else:
-            aw = input(f"/src/{version}/{side} already exists, wipe it (w), create a new folder (n) or kill the process (k) ? ") or "n"
+            aw = input(
+                f"/src/{version}/{side} already exists, wipe it (w), create a new folder (n) or kill the process (k) ? ") or "n"
             if aw == "w":
                 shutil.rmtree(path)
             elif aw == "n":
@@ -538,16 +554,17 @@ def make_paths(version: str, side: SideType, removal_bool, force, forceno) -> st
 
 def delete_dependencies(version: str, side: SideType) -> None:
     path = (PATH_TO_ROOT_DIR / "tmp" / version / side)
-    tempjarPath = (PATH_TO_ROOT_DIR / "src" / f"{version}-{side}-temp.jar")
-    with zipfile.ZipFile(tempjarPath) as z:
+    temp_jar_path = (PATH_TO_ROOT_DIR / "src" / f"{version}-{side}-temp.jar")
+    with zipfile.ZipFile(temp_jar_path) as z:
         z.extractall(path=path)
 
     for _dir in [join(path, "com"), path]:
         for f in os.listdir(_dir):
-            if os.path.isdir(join(_dir, f)) and split(f)[-1] not in ['net', 'assets', 'data', 'mojang', 'com', 'META-INF']:
+            if os.path.isdir(join(_dir, f)) and split(f)[-1] not in ['net', 'assets', 'data', 'mojang', 'com',
+                                                                     'META-INF']:
                 shutil.rmtree(join(_dir, f))
 
-    with zipfile.ZipFile(tempjarPath, 'w') as z:
+    with zipfile.ZipFile(temp_jar_path, 'w') as z:
         for f in glob.iglob(f'{path}{os.sep}**', recursive=True):
             z.write(f, arcname=f[len(str(path)) + 1:])
 
@@ -598,7 +615,8 @@ def main():
     if args.mcversion:
         use_flags = True
     if not args.quiet:
-        print("Decompiling using official Mojang mappings (Default options are in uppercase, you can just press Enter):")
+        print(
+            "Decompiling using official Mojang mappings (Default options are in uppercase, you can just press Enter):")
     if use_flags:
         removal_bool = args.clean
     else:
