@@ -203,7 +203,7 @@ def get_version_jar(target_version: str, side: SideType, quiet) -> None:
             with zipfile.ZipFile(target_side_path, mode="r") as z:
                 content = None
                 try:
-                    content = z.read(Path(f"META-INF", "versions.list"))
+                    content = z.read("META-INF/versions.list")
                 except Exception as _:
                     # we don't have a versions.list in it
                     pass
@@ -220,17 +220,17 @@ def get_version_jar(target_version: str, side: SideType, quiet) -> None:
                             f"Warning: received version ({version}) does not match the targeted version ({target_version}).")
                     new_jar_path = (PATH_TO_ROOT_DIR / "versions" / target_version)
                     try:
-                        new_jar_path = z.extract(Path("META-INF", "versions", path), new_jar_path)
+                        new_jar_path = z.extract("META-INF/versions/" + path, new_jar_path)
                     except Exception as e:
                         raise RuntimeError(f"Could not extract to {new_jar_path}: {e}")
-                    if not (PATH_TO_ROOT_DIR / new_jar_path).exists():
+                    if not Path(new_jar_path).exists():
                         raise RuntimeError(f"New {side} jar could not be extracted from archive at {new_jar_path}.")
                     file_hash = sha256(new_jar_path)
                     if file_hash != version_hash:
                         raise RuntimeError(
                             f"Extracted file's hash ({file_hash}) and expected hash ({version_hash}) did not match.")
                     try:
-                        shutil.move((PATH_TO_ROOT_DIR / new_jar_path), target_side_path)
+                        shutil.move(new_jar_path, target_side_path)
                         shutil.rmtree((PATH_TO_ROOT_DIR / "versions" / target_version / "META-INF"))
                     except Exception as e:
                         raise RuntimeError("Exception while removing the temp file", e)
